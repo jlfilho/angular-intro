@@ -1,143 +1,107 @@
-A ideia é construir uma aplicação simples chamada:
+Nesta aula, a aplicação deixará de ser apenas uma tela com lista de tarefas e passará a ser a base do sistema:
 
-# Lista de Tarefas de Estudo
+# Gerenciador de Estudos
 
-Ela vai ensinar, na prática:
+A aplicação terá:
 
-* criação do projeto Angular;
-* estrutura dos arquivos;
-* interpolação;
-* evento `(click)`;
-* `signal`;
-* `set`;
-* `update`;
-* `computed`;
-* binding de propriedades;
-* criação de componente;
-* `input`;
-* CSS de componente;
-* lista com `@for`;
-* condição com `@if`.
+* estrutura de pastas mais organizada;
+* páginas separadas;
+* rotas;
+* menu lateral com `mat-sidenav`;
+* layout principal com `RouterOutlet`;
+* modelos de domínio com tipagem forte.
 
-Angular é um framework web mantido pelo Google para construir aplicações rápidas, confiáveis e escaláveis, e sua documentação atual destaca componentes e signals como recursos centrais do desenvolvimento moderno com Angular. ([Angular][1])
+A documentação oficial do Angular apresenta componentes como blocos fundamentais da aplicação e o roteamento como o mecanismo usado para navegar entre diferentes telas ou views. O `RouterOutlet` marca onde a view roteada será exibida, o `RouterLink` cria links de navegação e o `RouterLinkActive` permite aplicar classe visual ao link da rota ativa. ([Angular][1])
 
 ---
 
-# Aula Tutorial — Angular do zero com Signals e Componentes
+# Aula 2 — Reestruturação, rotas, menu lateral e modelagem inicial
+
+## Tema
+
+Transformar a aplicação inicial em uma estrutura de sistema real com páginas, menu lateral e modelos bem definidos.
+
+## Objetivo
+
+Reorganizar o projeto para que ele deixe de ser uma tela única e passe a ser o início do sistema **Gerenciador de Estudos**.
 
 ## Duração
 
 **4 horas**
 
-## Público-alvo
-
-Alunos que já tiveram contato com:
-
-* HTML;
-* CSS;
-* JavaScript básico;
-* terminal;
-* VS Code.
-
 ---
 
-# 1. Preparação do projeto
+# 1. Resultado esperado da aula
 
-## 1.1 Instalar o Angular CLI
-
-No terminal, execute:
-
-```bash
-npm install -g @angular/cli
-```
-
-Depois confira se instalou:
-
-```bash
-ng version
-```
-
----
-
-## 1.2 Criar o projeto
-
-No terminal:
-
-```bash
-ng new aula-angular-tarefas
-```
-
-Durante a criação, o Angular pode fazer algumas perguntas.
-
-### Pergunta sobre CSS
-
-Quando aparecer algo como:
+Ao final da aula, a aplicação terá:
 
 ```text
-Which stylesheet format would you like to use?
+Gerenciador de Estudos
+├── Menu lateral
+├── Página inicial
+├── Página de estudantes
+├── Página de tarefas
+├── Página de relatórios
+└── Página sobre
 ```
 
-Escolha:
+Com as seguintes rotas:
 
 ```text
-CSS
+/             → Home
+/estudantes   → Estudantes
+/tarefas      → Tarefas
+/relatorios   → Relatórios
+/sobre        → Sobre
 ```
 
-### Pergunta sobre SSR/SSG
-
-Quando aparecer:
+E com modelos tipados:
 
 ```text
-Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? (y/N)
-```
-
-Responda:
-
-```text
-N
-```
-
-Ou apenas pressione **Enter**.
-
-Para esta aula inicial, não vamos usar SSR nem SSG.
-
-### Pergunta sobre ferramentas de IA
-
-Quando aparecer:
-
-```text
-Which AI tools do you want to configure with Angular best practices?
-```
-
-Escolha:
-
-```text
-None
-```
-
-Ou seja:
-
-```text
-❯◉ None
+Tarefa
+StatusTarefa
+PrioridadeTarefa
+Estudante
+TurnoEstudante
 ```
 
 ---
 
-## 1.3 Entrar na pasta do projeto
+# 2. Organização da aula
+
+| Tempo       | Etapa      | Conteúdo                                       |
+| ----------- | ---------- | ---------------------------------------------- |
+| 0h00 – 0h20 | Revisão    | Revisão da Aula 1 e objetivo da reestruturação |
+| 0h20 – 1h00 | Módulo 1   | Organização de pastas e criação das páginas    |
+| 1h00 – 1h40 | Módulo 2   | Configuração de rotas                          |
+| 1h40 – 1h50 | Intervalo  | Pausa                                          |
+| 1h50 – 2h50 | Módulo 3   | Menu lateral com Angular Material              |
+| 2h50 – 3h30 | Módulo 4   | Modelagem inicial com tipagem forte            |
+| 3h30 – 4h00 | Fechamento | Testes, revisão e atividade rápida             |
+
+---
+
+# 3. Ponto de partida
+
+Entre na pasta do projeto criado na Aula 1:
 
 ```bash
 cd aula-angular-tarefas
 ```
 
----
-
-## 1.4 Executar o projeto
+Execute a aplicação:
 
 ```bash
 ng serve
 ```
 
-Depois abra no navegador:
+Ou, se estiver usando o Angular CLI local:
+
+```bash
+npx ng serve
+```
+
+Abra no navegador:
 
 ```text
 http://localhost:4200
@@ -145,1140 +109,650 @@ http://localhost:4200
 
 ---
 
-# 2. Entendendo a estrutura inicial
+# 4. O que muda em relação à Aula 1?
 
-Abra o projeto no VS Code.
+Na Aula 1, o componente principal `App` controlava a tela diretamente.
 
-O arquivo principal da aplicação será:
+Ele provavelmente tinha:
 
 ```text
-src/app/app.ts
+título
+dados do estudante
+lista de tarefas
+cards
+botões
 ```
 
-Ele provavelmente está assim:
+A partir desta Aula 2, o componente `App` passa a ser o **layout geral** do sistema.
 
-```ts
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+Ou seja, ele não será mais a tela de tarefas.
 
-@Component({
-  selector: 'app-root',
-  imports: [RouterOutlet],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
-})
-export class App {
-  protected readonly title = signal('aula-angular-tarefas');
-}
+Ele será responsável por:
+
+```text
+App
+├── mat-sidenav
+├── mat-toolbar
+└── router-outlet
 ```
 
-## Explicação
-
-```ts
-import { Component, signal } from '@angular/core';
-```
-
-Essa linha importa dois recursos do Angular:
-
-* `Component`: usado para criar componentes;
-* `signal`: usado para criar estado reativo.
-
-A documentação atual do Angular explica que signals são estruturas que envolvem um valor e notificam os consumidores quando esse valor muda. Para ler um signal, chamamos o signal como uma função. ([Angular][2])
-
-```ts
-import { RouterOutlet } from '@angular/router';
-```
-
-O `RouterOutlet` é usado quando trabalhamos com rotas. Nesta aula, não vamos trabalhar com rotas, então podemos remover para simplificar.
+As funcionalidades ficarão em páginas separadas.
 
 ---
 
-# 3. Limpando o projeto inicial
-
-## 3.1 Atualize o arquivo `app.ts`
-
-Substitua todo o conteúdo de:
-
-```text
-src/app/app.ts
-```
-
-por:
-
-```ts
-import { Component, signal } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  imports: [],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
-})
-export class App {
-  title = signal('Lista de Tarefas de Estudo');
-}
-```
-
-Observe que removemos:
-
-```ts
-import { RouterOutlet } from '@angular/router';
-```
-
-E também removemos:
-
-```ts
-imports: [RouterOutlet]
-```
-
-Agora ficou:
-
-```ts
-imports: []
-```
-
----
-
-## 3.2 Atualize o arquivo `app.html`
-
-Abra:
-
-```text
-src/app/app.html
-```
-
-Apague todo o conteúdo que veio por padrão e coloque:
-
-```html
-<h1>{{ title() }}</h1>
-
-<p>Minha primeira aplicação Angular.</p>
-```
-
-## Explicação
-
-Como `title` é um `signal`, usamos:
-
-```html
-{{ title() }}
-```
-
-E não:
-
-```html
-{{ title }}
-```
-
-O parêntese é necessário porque o valor do signal é lido chamando-o como função.
-
----
-
-# Fase 1 — Fundamentos Angular
+# Módulo 1 — Organização de pastas e criação de páginas
 
 ## Tempo sugerido
 
 **40 minutos**
 
-Nesta fase, vamos trabalhar:
+## Objetivo
 
-* componente principal;
-* interpolação;
-* eventos com `(click)`.
+Criar uma estrutura mais próxima de um projeto real.
 
 ---
 
-# Módulo 1 — Primeiro contato com componente
+## 1.1 Estrutura desejada
 
-## Objetivo
-
-Entender que a tela da aplicação é controlada por um componente.
-
-O arquivo `app.ts` deve estar assim:
-
-```ts
-import { Component, signal } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  imports: [],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
-})
-export class App {
-  title = signal('Lista de Tarefas de Estudo');
-}
-```
-
-O arquivo `app.html` deve estar assim:
-
-```html
-<h1>{{ title() }}</h1>
-
-<p>Minha primeira aplicação Angular.</p>
-```
-
-## Explicação para os alunos
-
-O Angular organiza a aplicação em **componentes**. Cada componente pode ter:
-
-* um arquivo TypeScript;
-* um arquivo HTML;
-* um arquivo CSS.
-
-Neste caso:
+Dentro de:
 
 ```text
-app.ts
+src/app
 ```
 
-guarda a lógica.
+vamos organizar o projeto assim:
 
 ```text
-app.html
+src/app
+├── pages
+├── components
+├── services
+├── models
+├── pipes
+├── guards
+└── interceptors
 ```
 
-guarda o visual.
+Nesta aula, usaremos principalmente:
 
 ```text
-app.css
+pages
+models
 ```
 
-guarda os estilos.
+As demais pastas serão preparadas para as próximas aulas.
 
 ---
 
-# Módulo 2 — Texto dinâmico com interpolação
+## 1.2 Criar as pastas principais
+
+No terminal, dentro da pasta do projeto:
+
+```bash
+mkdir src/app/pages
+mkdir src/app/components
+mkdir src/app/services
+mkdir src/app/models
+mkdir src/app/pipes
+mkdir src/app/guards
+mkdir src/app/interceptors
+```
+
+No Windows PowerShell, caso algum comando não funcione, use:
+
+```powershell
+New-Item -ItemType Directory -Path src/app/pages
+New-Item -ItemType Directory -Path src/app/components
+New-Item -ItemType Directory -Path src/app/services
+New-Item -ItemType Directory -Path src/app/models
+New-Item -ItemType Directory -Path src/app/pipes
+New-Item -ItemType Directory -Path src/app/guards
+New-Item -ItemType Directory -Path src/app/interceptors
+```
+
+---
+
+## 1.3 Criar as páginas
+
+Agora vamos criar os componentes de página.
+
+Execute:
+
+```bash
+ng generate component pages/home --skip-tests
+ng generate component pages/estudantes --skip-tests
+ng generate component pages/tarefas --skip-tests
+ng generate component pages/relatorios --skip-tests
+ng generate component pages/sobre --skip-tests
+```
+
+Ou, com Angular CLI local:
+
+```bash
+npx ng generate component pages/home --skip-tests
+npx ng generate component pages/estudantes --skip-tests
+npx ng generate component pages/tarefas --skip-tests
+npx ng generate component pages/relatorios --skip-tests
+npx ng generate component pages/sobre --skip-tests
+```
+
+A estrutura ficará parecida com:
+
+```text
+src/app/pages
+├── home
+│   ├── home.ts
+│   ├── home.html
+│   └── home.css
+├── estudantes
+│   ├── estudantes.ts
+│   ├── estudantes.html
+│   └── estudantes.css
+├── tarefas
+│   ├── tarefas.ts
+│   ├── tarefas.html
+│   └── tarefas.css
+├── relatorios
+│   ├── relatorios.ts
+│   ├── relatorios.html
+│   └── relatorios.css
+└── sobre
+    ├── sobre.ts
+    ├── sobre.html
+    └── sobre.css
+```
+
+---
+
+## 1.4 Ajustar o conteúdo das páginas
+
+Abra:
+
+```text
+src/app/pages/home/home.html
+```
+
+Coloque:
+
+```html
+<h1>Bem-vindo ao Gerenciador de Estudos</h1>
+
+<p>
+  Esta aplicação será usada para gerenciar estudantes e suas tarefas de estudo.
+</p>
+```
+
+Abra:
+
+```text
+src/app/pages/estudantes/estudantes.html
+```
+
+Coloque:
+
+```html
+<h1>Estudantes</h1>
+
+<p>
+  Nesta página será implementado o cadastro de estudantes.
+</p>
+```
+
+Abra:
+
+```text
+src/app/pages/tarefas/tarefas.html
+```
+
+Coloque:
+
+```html
+<h1>Tarefas</h1>
+
+<p>
+  Nesta página será implementado o cadastro e a listagem de tarefas.
+</p>
+```
+
+Abra:
+
+```text
+src/app/pages/relatorios/relatorios.html
+```
+
+Coloque:
+
+```html
+<h1>Relatórios</h1>
+
+<p>
+  Nesta página serão exibidos relatórios sobre estudantes e tarefas.
+</p>
+```
+
+Abra:
+
+```text
+src/app/pages/sobre/sobre.html
+```
+
+Coloque:
+
+```html
+<h1>Sobre</h1>
+
+<p>
+  O Gerenciador de Estudos é uma aplicação Angular criada para fins didáticos.
+</p>
+```
+
+---
+
+# Módulo 2 — Roteamento básico
+
+## Tempo sugerido
+
+**40 minutos**
 
 ## Objetivo
 
-Mostrar dados da classe TypeScript dentro do HTML.
+Configurar a navegação entre as páginas.
 
-Atualize o arquivo:
+Em uma SPA, as funcionalidades existem dentro de uma única página HTML, e o navegador renderiza apenas as partes necessárias à medida que o usuário navega pela aplicação. Isso melhora a experiência do usuário porque evita o recarregamento completo da página. ([Angular][2])
 
-```text
-src/app/app.ts
-```
+---
 
-para:
+## 2.1 O que é rota?
 
-```ts
-import { Component, signal } from '@angular/core';
+Explique aos alunos:
 
-@Component({
-  selector: 'app-root',
-  imports: [],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
-})
-export class App {
-  title = signal('Lista de Tarefas de Estudo');
+Uma rota associa um endereço da aplicação a um componente.
 
-  estudante = 'Ana';
-  curso = 'Angular básico';
-  turno = 'Noite';
-}
-```
-
-Agora atualize o arquivo:
+Exemplo:
 
 ```text
-src/app/app.html
+/estudantes → Estudantes
 ```
 
-para:
+Quando o usuário acessa:
 
-```html
-<h1>{{ title() }}</h1>
-
-<p>Estudante: {{ estudante }}</p>
-<p>Curso: {{ curso }}</p>
-<p>Turno: {{ turno }}</p>
+```text
+http://localhost:4200/estudantes
 ```
 
-## Explicação
+o Angular exibe o componente da página de estudantes.
 
-A interpolação usa:
+---
 
-```html
-{{ }}
-```
+## 2.2 O que é `RouterOutlet`?
 
-Ela permite mostrar no HTML valores que estão no TypeScript.
+O `RouterOutlet` é o local onde o Angular exibe a página correspondente à rota atual.
 
 Exemplo:
 
 ```html
-<p>Curso: {{ curso }}</p>
+<router-outlet />
 ```
 
-O Angular procura a propriedade `curso` dentro da classe `App` e mostra o valor na tela.
+A documentação do Angular define `RouterOutlet` como a diretiva que marca onde o roteador deve exibir a view correspondente à rota ativa. ([Angular][1])
 
-## Atenção
+---
 
-Aqui temos dois tipos de dados:
+## 2.3 O que é `RouterLink`?
 
-```ts
-title = signal('Lista de Tarefas de Estudo');
-```
+O `RouterLink` transforma um elemento HTML em um link de navegação interno do Angular.
 
-Esse é um signal. No HTML usamos:
+Exemplo:
 
 ```html
-{{ title() }}
+<a routerLink="/estudantes">Estudantes</a>
 ```
 
-Já estes são valores comuns:
+Segundo a documentação, o `RouterLink` inicia a navegação para uma rota sem recarregar a página inteira. ([Angular][3])
 
-```ts
-estudante = 'Ana';
-curso = 'Angular básico';
-turno = 'Noite';
-```
+---
 
-No HTML usamos sem parênteses:
+## 2.4 O que é `RouterLinkActive`?
+
+O `RouterLinkActive` aplica uma classe CSS quando o link corresponde à rota ativa.
+
+Exemplo:
 
 ```html
-{{ estudante }}
-{{ curso }}
-{{ turno }}
+<a routerLink="/estudantes" routerLinkActive="ativo">
+  Estudantes
+</a>
+```
+
+A documentação informa que o `RouterLinkActive` adiciona ou remove classes em um elemento conforme a rota associada esteja ativa ou inativa. ([Angular][4])
+
+---
+
+## 2.5 Criar ou atualizar o arquivo de rotas
+
+Abra ou crie o arquivo:
+
+```text
+src/app/app.routes.ts
+```
+
+Coloque:
+
+```ts
+import { Routes } from '@angular/router';
+
+import { Home } from './pages/home/home';
+import { Estudantes } from './pages/estudantes/estudantes';
+import { Tarefas } from './pages/tarefas/tarefas';
+import { Relatorios } from './pages/relatorios/relatorios';
+import { Sobre } from './pages/sobre/sobre';
+
+export const routes: Routes = [
+  { path: '', component: Home },
+  { path: 'estudantes', component: Estudantes },
+  { path: 'tarefas', component: Tarefas },
+  { path: 'relatorios', component: Relatorios },
+  { path: 'sobre', component: Sobre },
+  { path: '**', redirectTo: '' }
+];
+```
+
+## Observação importante
+
+Dependendo da versão do Angular, os nomes das classes geradas podem variar. Se o Angular gerar algo como:
+
+```ts
+export class HomeComponent {}
+```
+
+então o import deverá ser:
+
+```ts
+import { HomeComponent } from './pages/home/home';
+```
+
+e a rota:
+
+```ts
+{ path: '', component: HomeComponent }
+```
+
+Mas, nas versões mais recentes do Angular CLI, é comum a classe ser gerada com nome simples, como:
+
+```ts
+export class Home {}
+```
+
+Use o nome que aparecer no arquivo `.ts` de cada página.
+
+---
+
+## 2.6 Configurar o `provideRouter`
+
+Abra:
+
+```text
+src/app/app.config.ts
+```
+
+Ele pode estar parecido com isto:
+
+```ts
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZoneChangeDetection({ eventCoalescing: true })
+  ]
+};
+```
+
+Atualize para incluir o roteamento:
+
+```ts
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideRouter } from '@angular/router';
+
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideRouter(routes)
+  ]
+};
 ```
 
 ---
 
-# Módulo 3 — Eventos com `(click)`
-
-## Objetivo
-
-Executar uma ação quando o usuário clicar em um botão.
-
-Atualize o arquivo `app.ts`:
-
-```ts
-import { Component, signal } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  imports: [],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
-})
-export class App {
-  title = signal('Lista de Tarefas de Estudo');
-
-  estudante = 'Ana';
-  curso = 'Angular básico';
-  turno = 'Noite';
-
-  alterarEstudante() {
-    this.estudante = 'Carlos';
-  }
-
-  alterarCurso() {
-    this.curso = 'Angular com componentes';
-  }
-}
-```
-
-Atualize o arquivo `app.html`:
-
-```html
-<h1>{{ title() }}</h1>
-
-<p>Estudante: {{ estudante }}</p>
-<p>Curso: {{ curso }}</p>
-<p>Turno: {{ turno }}</p>
-
-<button (click)="alterarEstudante()">Alterar estudante</button>
-
-<button (click)="alterarCurso()">Alterar curso</button>
-```
-
-## Explicação
-
-Este botão:
-
-```html
-<button (click)="alterarEstudante()">Alterar estudante</button>
-```
-
-executa este método:
-
-```ts
-alterarEstudante() {
-  this.estudante = 'Carlos';
-}
-```
-
-Quando o usuário clica, o Angular chama o método e a tela é atualizada.
-
----
-
-# Fase 2 — Estado e Signals
+# Módulo 3 — Menu lateral com Angular Material
 
 ## Tempo sugerido
 
 **1 hora**
 
-Nesta fase, vamos substituir as propriedades comuns por `signals`.
-
-Vamos trabalhar:
-
-* signal;
-* `set`;
-* `update`;
-* `computed`.
-
-A documentação do Angular mostra que signals podem ser graváveis, podendo ser alterados com `.set()` ou com `.update()`, e que `computed` cria signals derivados de outros signals. ([Angular][2])
-
----
-
-# Módulo 4 — Signals com `set`
-
 ## Objetivo
 
-Usar `signal` para guardar dados reativos.
-
-Atualize o arquivo `app.ts`:
-
-```ts
-import { Component, signal } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  imports: [],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
-})
-export class App {
-  title = signal('Lista de Tarefas de Estudo');
-
-  estudante = signal('Ana');
-  curso = signal('Angular básico');
-  turno = signal('Noite');
-
-  alterarEstudante() {
-    this.estudante.set('Carlos');
-  }
-
-  alterarCurso() {
-    this.curso.set('Angular com componentes');
-  }
-}
-```
-
-Atualize o arquivo `app.html`:
-
-```html
-<h1>{{ title() }}</h1>
-
-<p>Estudante: {{ estudante() }}</p>
-<p>Curso: {{ curso() }}</p>
-<p>Turno: {{ turno() }}</p>
-
-<button (click)="alterarEstudante()">Alterar estudante</button>
-
-<button (click)="alterarCurso()">Alterar curso</button>
-```
-
-## Explicação
-
-Antes tínhamos:
-
-```ts
-estudante = 'Ana';
-```
-
-Agora temos:
-
-```ts
-estudante = signal('Ana');
-```
-
-Antes alterávamos assim:
-
-```ts
-this.estudante = 'Carlos';
-```
-
-Agora alteramos assim:
-
-```ts
-this.estudante.set('Carlos');
-```
-
-Antes exibíamos assim:
-
-```html
-{{ estudante }}
-```
-
-Agora exibimos assim:
-
-```html
-{{ estudante() }}
-```
+Criar o layout principal com `mat-sidenav`.
 
 ---
 
-# Módulo 5 — Signals com `update`
+## 3.1 Instalar Angular Material
 
-## Objetivo
-
-Alterar um valor com base no valor anterior.
-
-Vamos criar um contador de tarefas.
-
-Atualize o `app.ts`:
-
-```ts
-import { Component, signal } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  imports: [],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
-})
-export class App {
-  title = signal('Lista de Tarefas de Estudo');
-
-  estudante = signal('Ana');
-  curso = signal('Angular básico');
-  turno = signal('Noite');
-
-  quantidadeTarefas = signal(0);
-
-  alterarEstudante() {
-    this.estudante.set('Carlos');
-  }
-
-  alterarCurso() {
-    this.curso.set('Angular com componentes');
-  }
-
-  adicionarTarefa() {
-    this.quantidadeTarefas.update(valorAtual => valorAtual + 1);
-  }
-
-  removerTarefa() {
-    this.quantidadeTarefas.update(valorAtual => {
-      if (valorAtual > 0) {
-        return valorAtual - 1;
-      }
-
-      return 0;
-    });
-  }
-}
-```
-
-Atualize o `app.html`:
-
-```html
-<h1>{{ title() }}</h1>
-
-<p>Estudante: {{ estudante() }}</p>
-<p>Curso: {{ curso() }}</p>
-<p>Turno: {{ turno() }}</p>
-
-<p>Quantidade de tarefas: {{ quantidadeTarefas() }}</p>
-
-<button (click)="alterarEstudante()">Alterar estudante</button>
-
-<button (click)="alterarCurso()">Alterar curso</button>
-
-<button (click)="adicionarTarefa()">Adicionar tarefa</button>
-
-<button (click)="removerTarefa()">Remover tarefa</button>
-```
-
-## Explicação
-
-O método `set` troca diretamente o valor:
-
-```ts
-this.estudante.set('Carlos');
-```
-
-O método `update` usa o valor anterior para gerar o novo valor:
-
-```ts
-this.quantidadeTarefas.update(valorAtual => valorAtual + 1);
-```
-
-Isso é útil para:
-
-* contadores;
-* carrinho de compras;
-* quantidade de itens;
-* curtidas;
-* votos;
-* listas.
-
----
-
-# Módulo 6 — Signals computados
-
-## Objetivo
-
-Criar um valor calculado automaticamente a partir de outros signals.
-
-Atualize o `app.ts`:
-
-```ts
-import { Component, computed, signal } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  imports: [],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
-})
-export class App {
-  title = signal('Lista de Tarefas de Estudo');
-
-  estudante = signal('Ana');
-  curso = signal('Angular básico');
-  turno = signal('Noite');
-
-  quantidadeTarefas = signal(0);
-
-  mensagemResumo = computed(() => {
-    return `${this.estudante()} possui ${this.quantidadeTarefas()} tarefa(s) cadastrada(s).`;
-  });
-
-  alterarEstudante() {
-    this.estudante.set('Carlos');
-  }
-
-  alterarCurso() {
-    this.curso.set('Angular com componentes');
-  }
-
-  adicionarTarefa() {
-    this.quantidadeTarefas.update(valorAtual => valorAtual + 1);
-  }
-
-  removerTarefa() {
-    this.quantidadeTarefas.update(valorAtual => {
-      if (valorAtual > 0) {
-        return valorAtual - 1;
-      }
-
-      return 0;
-    });
-  }
-}
-```
-
-Atualize o `app.html`:
-
-```html
-<h1>{{ title() }}</h1>
-
-<p>Estudante: {{ estudante() }}</p>
-<p>Curso: {{ curso() }}</p>
-<p>Turno: {{ turno() }}</p>
-
-<p>Quantidade de tarefas: {{ quantidadeTarefas() }}</p>
-
-<p>{{ mensagemResumo() }}</p>
-
-<button (click)="alterarEstudante()">Alterar estudante</button>
-
-<button (click)="alterarCurso()">Alterar curso</button>
-
-<button (click)="adicionarTarefa()">Adicionar tarefa</button>
-
-<button (click)="removerTarefa()">Remover tarefa</button>
-```
-
-## Explicação
-
-O `computed` cria um valor derivado.
-
-Neste exemplo:
-
-```ts
-mensagemResumo = computed(() => {
-  return `${this.estudante()} possui ${this.quantidadeTarefas()} tarefa(s) cadastrada(s).`;
-});
-```
-
-Ele depende de:
-
-```ts
-this.estudante()
-```
-
-e de:
-
-```ts
-this.quantidadeTarefas()
-```
-
-Quando um desses valores muda, a mensagem também muda.
-
----
-
-# Intervalo
-
-## Tempo sugerido
-
-**10 minutos**
-
----
-
-# Fase 3 — Arquitetura de Componentes
-
-## Tempo sugerido
-
-**1h20**
-
-Nesta fase, vamos melhorar a aplicação com:
-
-* binding de propriedades;
-* criação de componente;
-* componente filho;
-* input;
-* CSS;
-* lista com `@for`;
-* condição com `@if`.
-
----
-
-# Módulo 7 — Binding de propriedades e atributos
-
-## Objetivo
-
-Ligar propriedades TypeScript a atributos HTML.
-
-Atualize o arquivo `app.ts`:
-
-```ts
-import { Component, computed, signal } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  imports: [],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
-})
-export class App {
-  title = signal('Lista de Tarefas de Estudo');
-
-  estudante = signal('Ana');
-  curso = signal('Angular básico');
-  turno = signal('Noite');
-
-  quantidadeTarefas = signal(0);
-
-  imagemAngular = 'https://angular.dev/assets/images/press-kit/angular_icon_gradient.gif';
-
-  botaoRemoverDesabilitado = computed(() => this.quantidadeTarefas() === 0);
-
-  mensagemResumo = computed(() => {
-    return `${this.estudante()} possui ${this.quantidadeTarefas()} tarefa(s) cadastrada(s).`;
-  });
-
-  alterarEstudante() {
-    this.estudante.set('Carlos');
-  }
-
-  alterarCurso() {
-    this.curso.set('Angular com componentes');
-  }
-
-  adicionarTarefa() {
-    this.quantidadeTarefas.update(valorAtual => valorAtual + 1);
-  }
-
-  removerTarefa() {
-    this.quantidadeTarefas.update(valorAtual => {
-      if (valorAtual > 0) {
-        return valorAtual - 1;
-      }
-
-      return 0;
-    });
-  }
-}
-```
-
-Atualize o arquivo `app.html`:
-
-```html
-<h1>{{ title() }}</h1>
-
-<img [src]="imagemAngular" alt="Logo do Angular" width="80">
-
-<p>Estudante: {{ estudante() }}</p>
-<p>Curso: {{ curso() }}</p>
-<p>Turno: {{ turno() }}</p>
-
-<p>Quantidade de tarefas: {{ quantidadeTarefas() }}</p>
-
-<p>{{ mensagemResumo() }}</p>
-
-<button (click)="alterarEstudante()">Alterar estudante</button>
-
-<button (click)="alterarCurso()">Alterar curso</button>
-
-<button (click)="adicionarTarefa()">Adicionar tarefa</button>
-
-<button 
-  (click)="removerTarefa()" 
-  [disabled]="botaoRemoverDesabilitado()">
-  Remover tarefa
-</button>
-```
-
-## Explicação
-
-Aqui usamos:
-
-```html
-[src]="imagemAngular"
-```
-
-Isso envia o valor da propriedade `imagemAngular` para o atributo `src` da imagem.
-
-Também usamos:
-
-```html
-[disabled]="botaoRemoverDesabilitado()"
-```
-
-Isso controla se o botão ficará desabilitado.
-
----
-
-# Módulo 8 — Criando e aninhando componentes
-
-## Objetivo
-
-Criar um componente separado para representar uma tarefa.
-
-No terminal, dentro da pasta do projeto, execute:
+Se o Angular Material ainda não foi instalado no projeto, execute:
 
 ```bash
-ng generate component tarefa-card
+ng add @angular/material
 ```
 
-Ou a forma curta:
+Ou, com Angular CLI local:
 
 ```bash
-ng g c tarefa-card
+npx ng add @angular/material
 ```
 
-O Angular criará uma pasta parecida com:
+Quando perguntar o tema, escolha um tema pronto, por exemplo:
 
 ```text
-src/app/tarefa-card/
+Azure/Blue
 ```
 
-Dentro dela teremos arquivos como:
+Quando perguntar sobre tipografia:
 
 ```text
-tarefa-card.ts
-tarefa-card.html
-tarefa-card.css
+Set up global Angular Material typography styles?
+```
+
+Responda:
+
+```text
+y
+```
+
+Quando perguntar sobre animações:
+
+```text
+Include the Angular animations module?
+```
+
+Responda:
+
+```text
+y
 ```
 
 ---
 
-## 8.1 Editar o componente filho
+## 3.2 Atualizar o componente principal `app.ts`
 
 Abra:
-
-```text
-src/app/tarefa-card/tarefa-card.ts
-```
-
-Deixe assim:
-
-```ts
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-tarefa-card',
-  imports: [],
-  templateUrl: './tarefa-card.html',
-  styleUrl: './tarefa-card.css'
-})
-export class TarefaCard {
-
-}
-```
-
-Agora abra:
-
-```text
-src/app/tarefa-card/tarefa-card.html
-```
-
-Coloque:
-
-```html
-<div class="card">
-  <h2>Estudar Angular</h2>
-  <p>Status: pendente</p>
-</div>
-```
-
-Agora abra:
-
-```text
-src/app/tarefa-card/tarefa-card.css
-```
-
-Coloque:
-
-```css
-.card {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 12px;
-  margin: 8px 0;
-  background-color: #f7f7f7;
-}
-
-.card h2 {
-  margin: 0 0 8px;
-}
-```
-
----
-
-## 8.2 Usar o componente filho no componente principal
-
-Agora abra:
 
 ```text
 src/app/app.ts
 ```
 
-Atualize para importar o componente `TarefaCard`:
+Como agora o `App` será apenas o layout geral, substitua o conteúdo por:
 
 ```ts
-import { Component, computed, signal } from '@angular/core';
-import { TarefaCard } from './tarefa-card/tarefa-card';
+import { Component, signal } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatToolbarModule } from '@angular/material/toolbar';
 
 @Component({
   selector: 'app-root',
-  imports: [TarefaCard],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    MatButtonModule,
+    MatIconModule,
+    MatListModule,
+    MatSidenavModule,
+    MatToolbarModule
+  ],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App {
-  title = signal('Lista de Tarefas de Estudo');
-
-  estudante = signal('Ana');
-  curso = signal('Angular básico');
-  turno = signal('Noite');
-
-  quantidadeTarefas = signal(0);
-
-  imagemAngular = 'https://angular.dev/assets/images/press-kit/angular_icon_gradient.gif';
-
-  botaoRemoverDesabilitado = computed(() => this.quantidadeTarefas() === 0);
-
-  mensagemResumo = computed(() => {
-    return `${this.estudante()} possui ${this.quantidadeTarefas()} tarefa(s) cadastrada(s).`;
-  });
-
-  alterarEstudante() {
-    this.estudante.set('Carlos');
-  }
-
-  alterarCurso() {
-    this.curso.set('Angular com componentes');
-  }
-
-  adicionarTarefa() {
-    this.quantidadeTarefas.update(valorAtual => valorAtual + 1);
-  }
-
-  removerTarefa() {
-    this.quantidadeTarefas.update(valorAtual => {
-      if (valorAtual > 0) {
-        return valorAtual - 1;
-      }
-
-      return 0;
-    });
-  }
+  title = signal('Gerenciador de Estudos');
 }
-```
-
-Agora abra:
-
-```text
-src/app/app.html
-```
-
-E adicione no final:
-
-```html
-<app-tarefa-card />
-```
-
-O arquivo completo fica assim:
-
-```html
-<h1>{{ title() }}</h1>
-
-<img [src]="imagemAngular" alt="Logo do Angular" width="80">
-
-<p>Estudante: {{ estudante() }}</p>
-<p>Curso: {{ curso() }}</p>
-<p>Turno: {{ turno() }}</p>
-
-<p>Quantidade de tarefas: {{ quantidadeTarefas() }}</p>
-
-<p>{{ mensagemResumo() }}</p>
-
-<button (click)="alterarEstudante()">Alterar estudante</button>
-
-<button (click)="alterarCurso()">Alterar curso</button>
-
-<button (click)="adicionarTarefa()">Adicionar tarefa</button>
-
-<button 
-  (click)="removerTarefa()" 
-  [disabled]="botaoRemoverDesabilitado()">
-  Remover tarefa
-</button>
-
-<app-tarefa-card />
-```
-
-## Explicação
-
-Para usar um componente dentro de outro, precisamos:
-
-1. importar o componente:
-
-```ts
-import { TarefaCard } from './tarefa-card/tarefa-card';
-```
-
-2. adicionar no `imports`:
-
-```ts
-imports: [TarefaCard]
-```
-
-3. usar o seletor no HTML:
-
-```html
-<app-tarefa-card />
 ```
 
 ---
 
-# Módulo 9 — Entradas de componente com `input`
-
-## Objetivo
-
-Passar dados do componente pai para o componente filho.
-
-A documentação atual do Angular mostra que entradas de componentes podem ser declaradas com `input()` e que o valor recebido é lido como signal, ou seja, chamando-o como função no template. ([Angular][3])
+## 3.3 Atualizar o template principal `app.html`
 
 Abra:
 
 ```text
-src/app/tarefa-card/tarefa-card.ts
-```
-
-Substitua por:
-
-```ts
-import { Component, input } from '@angular/core';
-
-@Component({
-  selector: 'app-tarefa-card',
-  imports: [],
-  templateUrl: './tarefa-card.html',
-  styleUrl: './tarefa-card.css'
-})
-export class TarefaCard {
-  nome = input.required<string>();
-  status = input('pendente');
-}
-```
-
-Agora abra:
-
-```text
-src/app/tarefa-card/tarefa-card.html
-```
-
-Substitua por:
-
-```html
-<div class="card">
-  <h2>{{ nome() }}</h2>
-  <p>Status: {{ status() }}</p>
-</div>
-```
-
-Agora abra:
-
-```text
 src/app/app.html
 ```
 
-Substitua:
+Apague o conteúdo anterior da Aula 1 e coloque:
 
 ```html
-<app-tarefa-card />
-```
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav mode="side" opened class="sidenav">
+    <div class="menu-titulo">
+      <h2>Menu</h2>
+    </div>
 
-por:
+    <mat-nav-list>
+      <a
+        mat-list-item
+        routerLink="/"
+        routerLinkActive="ativo"
+        [routerLinkActiveOptions]="{ exact: true }"
+        ariaCurrentWhenActive="page">
+        <mat-icon>home</mat-icon>
+        <span>Início</span>
+      </a>
 
-```html
-<app-tarefa-card nome="Estudar componentes" status="em andamento" />
+      <a
+        mat-list-item
+        routerLink="/estudantes"
+        routerLinkActive="ativo"
+        ariaCurrentWhenActive="page">
+        <mat-icon>school</mat-icon>
+        <span>Estudantes</span>
+      </a>
 
-<app-tarefa-card nome="Praticar signals" status="pendente" />
+      <a
+        mat-list-item
+        routerLink="/tarefas"
+        routerLinkActive="ativo"
+        ariaCurrentWhenActive="page">
+        <mat-icon>check_circle</mat-icon>
+        <span>Tarefas</span>
+      </a>
 
-<app-tarefa-card nome="Revisar templates" status="concluída" />
+      <a
+        mat-list-item
+        routerLink="/relatorios"
+        routerLinkActive="ativo"
+        ariaCurrentWhenActive="page">
+        <mat-icon>bar_chart</mat-icon>
+        <span>Relatórios</span>
+      </a>
+
+      <a
+        mat-list-item
+        routerLink="/sobre"
+        routerLinkActive="ativo"
+        ariaCurrentWhenActive="page">
+        <mat-icon>info</mat-icon>
+        <span>Sobre</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar color="primary" class="toolbar">
+      <span>{{ title() }}</span>
+    </mat-toolbar>
+
+    <main class="conteudo">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
 ```
 
 ## Explicação
 
-No componente filho, temos:
-
-```ts
-nome = input.required<string>();
-status = input('pendente');
-```
-
-Isso significa:
-
-* `nome` é obrigatório;
-* `status` tem valor padrão `"pendente"`.
-
-No componente pai, enviamos os dados assim:
+O `mat-sidenav-container` é o contêiner principal do layout.
 
 ```html
-<app-tarefa-card nome="Estudar componentes" status="em andamento" />
+<mat-sidenav-container>
 ```
 
-No componente filho, exibimos assim:
+O `mat-sidenav` é o menu lateral.
 
 ```html
-{{ nome() }}
-{{ status() }}
+<mat-sidenav mode="side" opened>
 ```
+
+O `mat-sidenav-content` é a área onde ficam a toolbar e o conteúdo principal.
+
+```html
+<mat-sidenav-content>
+```
+
+O `router-outlet` é onde a página atual será exibida.
+
+```html
+<router-outlet />
+```
+
+A navegação ocorre pelos links:
+
+```html
+routerLink="/tarefas"
+```
+
+A classe visual do link ativo é controlada por:
+
+```html
+routerLinkActive="ativo"
+```
+
+O atributo:
+
+```html
+ariaCurrentWhenActive="page"
+```
+
+melhora a acessibilidade, indicando que aquele link representa a página atual. A documentação de acessibilidade do Angular recomenda atenção a atributos ARIA para melhorar experiências para usuários que dependem de tecnologias assistivas. ([Angular][5])
 
 ---
 
-# Módulo 10 — Estilizando a aplicação
-
-## Objetivo
-
-Melhorar o visual usando CSS.
+## 3.4 Atualizar o estilo principal `app.css`
 
 Abra:
 
@@ -1286,683 +760,881 @@ Abra:
 src/app/app.css
 ```
 
+Substitua por:
+
+```css
+.sidenav-container {
+  min-height: 100vh;
+}
+
+.sidenav {
+  width: 240px;
+  border-right: 1px solid #d6d9e6;
+}
+
+.menu-titulo {
+  padding: 16px;
+  background-color: #f0f4ff;
+}
+
+.menu-titulo h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: center;
+  min-height: 64px;
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 8px rgba(40, 80, 160, 0.18);
+}
+
+.toolbar span {
+  text-align: center;
+}
+
+.conteudo {
+  padding: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+mat-nav-list a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+mat-nav-list a mat-icon {
+  margin-right: 8px;
+}
+
+.ativo {
+  background-color: #e8f0fe;
+  font-weight: 600;
+}
+```
+
+---
+
+# Módulo 4 — Modelagem inicial com tipagem forte
+
+## Tempo sugerido
+
+**40 minutos**
+
+## Objetivo
+
+Criar os modelos iniciais do domínio da aplicação usando TypeScript.
+
+Nesta aula, ainda não criaremos o CRUD completo. O objetivo é preparar o domínio da aplicação.
+
+---
+
+## 4.1 Criar o modelo de tarefa
+
+Crie o arquivo:
+
+```text
+src/app/models/tarefa.model.ts
+```
+
+Dentro dele, coloque:
+
+```ts
+export type StatusTarefa = 'pendente' | 'em andamento' | 'concluida';
+
+export type PrioridadeTarefa = 'baixa' | 'media' | 'alta';
+
+export type Tarefa = {
+  id: number;
+  nome: string;
+  status: StatusTarefa;
+  prioridade: PrioridadeTarefa;
+};
+```
+
+## Explicação
+
+Aqui estamos usando **tipagem forte** para limitar os valores possíveis.
+
+O `status` não aceita qualquer texto. Ele aceita apenas:
+
+```ts
+'pendente' | 'em andamento' | 'concluida'
+```
+
+Isso significa que este objeto é válido:
+
+```ts
+const tarefa: Tarefa = {
+  id: 1,
+  nome: 'Estudar rotas',
+  status: 'pendente',
+  prioridade: 'alta'
+};
+```
+
+Mas este objeto daria erro:
+
+```ts
+const tarefa: Tarefa = {
+  id: 1,
+  nome: 'Estudar rotas',
+  status: 'finalizada',
+  prioridade: 'alta'
+};
+```
+
+Porque:
+
+```ts
+'finalizada'
+```
+
+não pertence ao tipo:
+
+```ts
+StatusTarefa
+```
+
+---
+
+## 4.2 Criar o modelo de estudante
+
+Crie o arquivo:
+
+```text
+src/app/models/estudante.model.ts
+```
+
+Dentro dele, coloque:
+
+```ts
+export type TurnoEstudante = 'matutino' | 'vespertino' | 'noturno';
+
+export type Estudante = {
+  id: number;
+  nome: string;
+  email: string;
+  curso: string;
+  turno: TurnoEstudante;
+};
+```
+
+## Explicação
+
+O estudante terá:
+
+```text
+id
+nome
+email
+curso
+turno
+```
+
+E o turno também será tipado.
+
+Valores permitidos:
+
+```ts
+'matutino' | 'vespertino' | 'noturno'
+```
+
+---
+
+## 4.3 Usar os modelos em uma página para demonstração
+
+Para mostrar que os tipos funcionam, abra:
+
+```text
+src/app/pages/tarefas/tarefas.ts
+```
+
+Substitua o conteúdo por:
+
+```ts
+import { Component, signal } from '@angular/core';
+
+import { Tarefa } from '../../models/tarefa.model';
+
+@Component({
+  selector: 'app-tarefas',
+  imports: [],
+  templateUrl: './tarefas.html',
+  styleUrl: './tarefas.css'
+})
+export class Tarefas {
+  tarefas = signal<Tarefa[]>([
+    {
+      id: 1,
+      nome: 'Reestruturar aplicação Angular',
+      status: 'pendente',
+      prioridade: 'alta'
+    },
+    {
+      id: 2,
+      nome: 'Criar menu lateral',
+      status: 'em andamento',
+      prioridade: 'media'
+    }
+  ]);
+}
+```
+
+Agora abra:
+
+```text
+src/app/pages/tarefas/tarefas.html
+```
+
+Substitua por:
+
+```html
+<h1>Tarefas</h1>
+
+<p>
+  Esta página será usada para cadastrar, editar e listar tarefas de estudo.
+</p>
+
+<section>
+  <h2>Tarefas de exemplo</h2>
+
+  @for (tarefa of tarefas(); track tarefa.id) {
+    <article class="tarefa-exemplo">
+      <h3>{{ tarefa.nome }}</h3>
+      <p>Status: {{ tarefa.status }}</p>
+      <p>Prioridade: {{ tarefa.prioridade }}</p>
+    </article>
+  }
+</section>
+```
+
+Abra:
+
+```text
+src/app/pages/tarefas/tarefas.css
+```
+
 Coloque:
 
 ```css
-.container {
-  max-width: 800px;
-  margin: 32px auto;
-  font-family: Arial, sans-serif;
-  padding: 24px;
+.tarefa-exemplo {
+  border: 1px solid #d6d9e6;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background-color: #f8f9ff;
 }
 
-.header {
-  background-color: #f0f4ff;
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
+.tarefa-exemplo h3 {
+  margin-top: 0;
 }
-
-.acoes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 16px 0;
-}
-
-.lista {
-  margin-top: 20px;
-}
-
-button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-```
-
-Agora atualize o `app.html`:
-
-```html
-<main class="container">
-  <section class="header">
-    <h1>{{ title() }}</h1>
-
-    <img [src]="imagemAngular" alt="Logo do Angular" width="80">
-
-    <p>Estudante: {{ estudante() }}</p>
-    <p>Curso: {{ curso() }}</p>
-    <p>Turno: {{ turno() }}</p>
-
-    <p>Quantidade de tarefas: {{ quantidadeTarefas() }}</p>
-
-    <p>{{ mensagemResumo() }}</p>
-  </section>
-
-  <section class="acoes">
-    <button (click)="alterarEstudante()">Alterar estudante</button>
-
-    <button (click)="alterarCurso()">Alterar curso</button>
-
-    <button (click)="adicionarTarefa()">Adicionar tarefa</button>
-
-    <button 
-      (click)="removerTarefa()" 
-      [disabled]="botaoRemoverDesabilitado()">
-      Remover tarefa
-    </button>
-  </section>
-
-  <section class="lista">
-    <app-tarefa-card nome="Estudar componentes" status="em andamento" />
-
-    <app-tarefa-card nome="Praticar signals" status="pendente" />
-
-    <app-tarefa-card nome="Revisar templates" status="concluída" />
-  </section>
-</main>
 ```
 
 ---
 
-# Módulo 11 — Renderização de listas com `@for`
+## 4.4 Usar o modelo de estudante em uma página para demonstração
 
-## Objetivo
+Abra:
 
-Exibir vários componentes a partir de uma lista.
+```text
+src/app/pages/estudantes/estudantes.ts
+```
 
-O Angular possui controle de fluxo no template, incluindo `@for` para repetição e `@if` para condição. A documentação mostra que o `@for` usa `track` para identificar cada item renderizado. ([Angular][4])
-
-Agora vamos trocar os três cards fixos por uma lista.
-
-Atualize o `app.ts` inteiro:
+Substitua por:
 
 ```ts
-import { Component, computed, signal } from '@angular/core';
-import { TarefaCard } from './tarefa-card/tarefa-card';
+import { Component, signal } from '@angular/core';
 
-type Tarefa = {
-  id: number;
-  nome: string;
-  status: string;
-};
+import { Estudante } from '../../models/estudante.model';
 
 @Component({
-  selector: 'app-root',
-  imports: [TarefaCard],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
-})
-export class App {
-  title = signal('Lista de Tarefas de Estudo');
-
-  estudante = signal('Ana');
-  curso = signal('Angular básico');
-  turno = signal('Noite');
-
-  imagemAngular = 'https://angular.dev/assets/images/press-kit/angular_icon_gradient.gif';
-
-  tarefas = signal<Tarefa[]>([
-    { id: 1, nome: 'Estudar componentes', status: 'em andamento' },
-    { id: 2, nome: 'Praticar signals', status: 'pendente' },
-    { id: 3, nome: 'Revisar templates', status: 'concluída' }
-  ]);
-
-  quantidadeTarefas = computed(() => this.tarefas().length);
-
-  botaoRemoverDesabilitado = computed(() => this.quantidadeTarefas() === 0);
-
-  mensagemResumo = computed(() => {
-    return `${this.estudante()} possui ${this.quantidadeTarefas()} tarefa(s) cadastrada(s).`;
-  });
-
-  alterarEstudante() {
-    this.estudante.set('Carlos');
-  }
-
-  alterarCurso() {
-    this.curso.set('Angular com componentes');
-  }
-
-  adicionarTarefa() {
-    const novaTarefa: Tarefa = {
-      id: Date.now(),
-      nome: 'Nova tarefa de estudo',
-      status: 'pendente'
-    };
-
-    this.tarefas.update(listaAtual => [...listaAtual, novaTarefa]);
-  }
-
-  removerTarefa() {
-    this.tarefas.update(listaAtual => listaAtual.slice(0, -1));
-  }
-}
-```
-
-Agora atualize o `app.html`:
-
-```html
-<main class="container">
-  <section class="header">
-    <h1>{{ title() }}</h1>
-
-    <img [src]="imagemAngular" alt="Logo do Angular" width="80">
-
-    <p>Estudante: {{ estudante() }}</p>
-    <p>Curso: {{ curso() }}</p>
-    <p>Turno: {{ turno() }}</p>
-
-    <p>Quantidade de tarefas: {{ quantidadeTarefas() }}</p>
-
-    <p>{{ mensagemResumo() }}</p>
-  </section>
-
-  <section class="acoes">
-    <button (click)="alterarEstudante()">Alterar estudante</button>
-
-    <button (click)="alterarCurso()">Alterar curso</button>
-
-    <button (click)="adicionarTarefa()">Adicionar tarefa</button>
-
-    <button 
-      (click)="removerTarefa()" 
-      [disabled]="botaoRemoverDesabilitado()">
-      Remover tarefa
-    </button>
-  </section>
-
-  <section class="lista">
-    @for (tarefa of tarefas(); track tarefa.id) {
-      <app-tarefa-card 
-        [nome]="tarefa.nome" 
-        [status]="tarefa.status" />
-    }
-  </section>
-</main>
-```
-
-## Explicação
-
-Antes tínhamos cards fixos:
-
-```html
-<app-tarefa-card nome="Estudar componentes" status="em andamento" />
-```
-
-Agora temos uma lista no TypeScript:
-
-```ts
-tarefas = signal<Tarefa[]>([
-  { id: 1, nome: 'Estudar componentes', status: 'em andamento' },
-  { id: 2, nome: 'Praticar signals', status: 'pendente' },
-  { id: 3, nome: 'Revisar templates', status: 'concluída' }
-]);
-```
-
-E repetimos no HTML:
-
-```html
-@for (tarefa of tarefas(); track tarefa.id) {
-  <app-tarefa-card 
-    [nome]="tarefa.nome" 
-    [status]="tarefa.status" />
-}
-```
-
-Observe a diferença:
-
-Quando passamos texto fixo:
-
-```html
-nome="Estudar componentes"
-```
-
-Quando passamos valor vindo do TypeScript:
-
-```html
-[nome]="tarefa.nome"
-```
-
----
-
-# Módulo 12 — Renderização condicional com `@if`
-
-## Objetivo
-
-Mostrar uma mensagem quando não houver tarefas.
-
-Atualize apenas a parte da lista no `app.html`.
-
-Troque:
-
-```html
-<section class="lista">
-  @for (tarefa of tarefas(); track tarefa.id) {
-    <app-tarefa-card 
-      [nome]="tarefa.nome" 
-      [status]="tarefa.status" />
-  }
-</section>
-```
-
-por:
-
-```html
-<section class="lista">
-  @if (tarefas().length > 0) {
-    @for (tarefa of tarefas(); track tarefa.id) {
-      <app-tarefa-card 
-        [nome]="tarefa.nome" 
-        [status]="tarefa.status" />
-    }
-  } @else {
-    <p>Nenhuma tarefa cadastrada.</p>
-  }
-</section>
-```
-
-## Explicação
-
-O `@if` verifica uma condição:
-
-```html
-@if (tarefas().length > 0)
-```
-
-Se a lista tiver tarefas, mostra os cards.
-
-Se a lista estiver vazia, mostra:
-
-```html
-<p>Nenhuma tarefa cadastrada.</p>
-```
-
----
-
-# Código final da aplicação
-
-## Arquivo `src/app/app.ts`
-
-```ts
-import { Component, computed, signal } from '@angular/core';
-import { TarefaCard } from './tarefa-card/tarefa-card';
-
-type Tarefa = {
-  id: number;
-  nome: string;
-  status: string;
-};
-
-@Component({
-  selector: 'app-root',
-  imports: [TarefaCard],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
-})
-export class App {
-  title = signal('Lista de Tarefas de Estudo');
-
-  estudante = signal('Ana');
-  curso = signal('Angular básico');
-  turno = signal('Noite');
-
-  imagemAngular = 'https://angular.dev/assets/images/press-kit/angular_icon_gradient.gif';
-
-  tarefas = signal<Tarefa[]>([
-    { id: 1, nome: 'Estudar componentes', status: 'em andamento' },
-    { id: 2, nome: 'Praticar signals', status: 'pendente' },
-    { id: 3, nome: 'Revisar templates', status: 'concluída' }
-  ]);
-
-  quantidadeTarefas = computed(() => this.tarefas().length);
-
-  botaoRemoverDesabilitado = computed(() => this.quantidadeTarefas() === 0);
-
-  mensagemResumo = computed(() => {
-    return `${this.estudante()} possui ${this.quantidadeTarefas()} tarefa(s) cadastrada(s).`;
-  });
-
-  alterarEstudante() {
-    this.estudante.set('Carlos');
-  }
-
-  alterarCurso() {
-    this.curso.set('Angular com componentes');
-  }
-
-  adicionarTarefa() {
-    const novaTarefa: Tarefa = {
-      id: Date.now(),
-      nome: 'Nova tarefa de estudo',
-      status: 'pendente'
-    };
-
-    this.tarefas.update(listaAtual => [...listaAtual, novaTarefa]);
-  }
-
-  removerTarefa() {
-    this.tarefas.update(listaAtual => listaAtual.slice(0, -1));
-  }
-}
-```
-
----
-
-## Arquivo `src/app/app.html`
-
-```html
-<main class="container">
-  <section class="header">
-    <h1>{{ title() }}</h1>
-
-    <img [src]="imagemAngular" alt="Logo do Angular" width="80">
-
-    <p>Estudante: {{ estudante() }}</p>
-    <p>Curso: {{ curso() }}</p>
-    <p>Turno: {{ turno() }}</p>
-
-    <p>Quantidade de tarefas: {{ quantidadeTarefas() }}</p>
-
-    <p>{{ mensagemResumo() }}</p>
-  </section>
-
-  <section class="acoes">
-    <button (click)="alterarEstudante()">Alterar estudante</button>
-
-    <button (click)="alterarCurso()">Alterar curso</button>
-
-    <button (click)="adicionarTarefa()">Adicionar tarefa</button>
-
-    <button 
-      (click)="removerTarefa()" 
-      [disabled]="botaoRemoverDesabilitado()">
-      Remover tarefa
-    </button>
-  </section>
-
-  <section class="lista">
-    @if (tarefas().length > 0) {
-      @for (tarefa of tarefas(); track tarefa.id) {
-        <app-tarefa-card 
-          [nome]="tarefa.nome" 
-          [status]="tarefa.status" />
-      }
-    } @else {
-      <p>Nenhuma tarefa cadastrada.</p>
-    }
-  </section>
-</main>
-```
-
----
-
-## Arquivo `src/app/app.css`
-
-```css
-.container {
-  max-width: 800px;
-  margin: 32px auto;
-  font-family: Arial, sans-serif;
-  padding: 24px;
-}
-
-.header {
-  background-color: #f0f4ff;
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-}
-
-.acoes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 16px 0;
-}
-
-.lista {
-  margin-top: 20px;
-}
-
-button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-```
-
----
-
-## Arquivo `src/app/tarefa-card/tarefa-card.ts`
-
-```ts
-import { Component, input } from '@angular/core';
-
-@Component({
-  selector: 'app-tarefa-card',
+  selector: 'app-estudantes',
   imports: [],
-  templateUrl: './tarefa-card.html',
-  styleUrl: './tarefa-card.css'
+  templateUrl: './estudantes.html',
+  styleUrl: './estudantes.css'
 })
-export class TarefaCard {
-  nome = input.required<string>();
-  status = input('pendente');
+export class Estudantes {
+  estudantes = signal<Estudante[]>([
+    {
+      id: 1,
+      nome: 'Ana Silva',
+      email: 'ana@email.com',
+      curso: 'Angular Básico',
+      turno: 'noturno'
+    },
+    {
+      id: 2,
+      nome: 'Carlos Souza',
+      email: 'carlos@email.com',
+      curso: 'Frontend com Angular',
+      turno: 'vespertino'
+    }
+  ]);
 }
 ```
 
----
+Abra:
 
-## Arquivo `src/app/tarefa-card/tarefa-card.html`
-
-```html
-<div class="card">
-  <h2>{{ nome() }}</h2>
-  <p>Status: {{ status() }}</p>
-</div>
+```text
+src/app/pages/estudantes/estudantes.html
 ```
 
----
+Substitua por:
 
-## Arquivo `src/app/tarefa-card/tarefa-card.css`
+```html
+<h1>Estudantes</h1>
+
+<p>
+  Esta página será usada para cadastrar, editar e listar estudantes.
+</p>
+
+<section>
+  <h2>Estudantes de exemplo</h2>
+
+  @for (estudante of estudantes(); track estudante.id) {
+    <article class="estudante-exemplo">
+      <h3>{{ estudante.nome }}</h3>
+      <p>E-mail: {{ estudante.email }}</p>
+      <p>Curso: {{ estudante.curso }}</p>
+      <p>Turno: {{ estudante.turno }}</p>
+    </article>
+  }
+</section>
+```
+
+Abra:
+
+```text
+src/app/pages/estudantes/estudantes.css
+```
+
+Coloque:
 
 ```css
-.card {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 12px;
-  margin: 8px 0;
-  background-color: #f7f7f7;
+.estudante-exemplo {
+  border: 1px solid #d6d9e6;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background-color: #f8f9ff;
 }
 
-.card h2 {
-  margin: 0 0 8px;
+.estudante-exemplo h3 {
+  margin-top: 0;
 }
 ```
 
 ---
 
-# Roteiro de tempo da aula de 4 horas
+# Módulo 5 — Testes da navegação e fechamento
 
-## Primeira parte — 40 minutos
+## Tempo sugerido
 
-Conteúdo:
+**30 minutos**
 
-* criação do projeto;
-* limpeza dos arquivos;
-* explicação do `app.ts`;
-* interpolação;
-* evento `(click)`.
+## Objetivo
+
+Testar se o layout, as rotas, o menu lateral e os modelos estão funcionando.
+
+---
+
+## 5.1 Testar as rotas pelo menu
+
+Clique em:
+
+```text
+Início
+Estudantes
+Tarefas
+Relatórios
+Sobre
+```
 
 Resultado esperado:
 
-O aluno consegue mostrar dados na tela e alterar dados com botão.
+* a URL deve mudar;
+* o conteúdo central deve mudar;
+* o menu lateral deve permanecer fixo;
+* a toolbar deve permanecer no topo;
+* o link ativo deve ficar destacado.
 
 ---
 
-## Segunda parte — 1 hora
+## 5.2 Testar rotas diretamente pela URL
 
-Conteúdo:
+No navegador, teste:
 
-* `signal`;
-* leitura com `signal()`;
-* alteração com `.set()`;
-* alteração com `.update()`;
-* criação de `computed`.
+```text
+http://localhost:4200/
+http://localhost:4200/estudantes
+http://localhost:4200/tarefas
+http://localhost:4200/relatorios
+http://localhost:4200/sobre
+```
 
 Resultado esperado:
 
-O aluno entende a diferença entre variável comum e signal.
+Cada endereço deve abrir sua respectiva página.
 
 ---
 
-## Intervalo — 10 minutos
+## 5.3 Testar rota inexistente
 
----
+Digite:
 
-## Terceira parte — 1h20
-
-Conteúdo:
-
-* binding de propriedade;
-* criação de componente;
-* componente filho;
-* input;
-* CSS;
-* `@for`;
-* `@if`.
+```text
+http://localhost:4200/qualquer-coisa
+```
 
 Resultado esperado:
 
-O aluno consegue montar uma aplicação com mais de um componente.
+A aplicação deve redirecionar para:
 
----
+```text
+/
+```
 
-## Quarta parte — 50 minutos
-
-Atividade prática orientada.
-
-Peça aos alunos para escolherem pelo menos **3 melhorias**:
-
-1. Criar botão para limpar todas as tarefas.
-2. Criar botão para alterar o turno.
-3. Criar mais tarefas iniciais.
-4. Adicionar prioridade na tarefa.
-5. Criar um novo componente chamado `cabecalho`.
-6. Alterar o texto do título com `set`.
-7. Criar uma mensagem computada para indicar se a lista está vazia.
-8. Criar botão para marcar todas as tarefas como concluídas.
-
----
-
-# Exemplo de melhoria: limpar tarefas
-
-No `app.ts`, adicione:
+Isso acontece por causa da rota:
 
 ```ts
-limparTarefas() {
-  this.tarefas.set([]);
-}
-```
-
-No `app.html`, dentro da seção de botões:
-
-```html
-<button (click)="limparTarefas()">Limpar tarefas</button>
+{ path: '**', redirectTo: '' }
 ```
 
 ---
 
-# Exemplo de melhoria: alterar turno
+# Código final esperado da Aula 2
 
-No `app.ts`, adicione:
+## `src/app/app.ts`
 
 ```ts
-alterarTurno() {
-  this.turno.set('Vespertino');
+import { Component, signal } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatToolbarModule } from '@angular/material/toolbar';
+
+@Component({
+  selector: 'app-root',
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    MatButtonModule,
+    MatIconModule,
+    MatListModule,
+    MatSidenavModule,
+    MatToolbarModule
+  ],
+  templateUrl: './app.html',
+  styleUrl: './app.css'
+})
+export class App {
+  title = signal('Gerenciador de Estudos');
 }
 ```
 
-No `app.html`, dentro da seção de botões:
+---
+
+## `src/app/app.html`
 
 ```html
-<button (click)="alterarTurno()">Alterar turno</button>
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav mode="side" opened class="sidenav">
+    <div class="menu-titulo">
+      <h2>Menu</h2>
+    </div>
+
+    <mat-nav-list>
+      <a
+        mat-list-item
+        routerLink="/"
+        routerLinkActive="ativo"
+        [routerLinkActiveOptions]="{ exact: true }"
+        ariaCurrentWhenActive="page">
+        <mat-icon>home</mat-icon>
+        <span>Início</span>
+      </a>
+
+      <a
+        mat-list-item
+        routerLink="/estudantes"
+        routerLinkActive="ativo"
+        ariaCurrentWhenActive="page">
+        <mat-icon>school</mat-icon>
+        <span>Estudantes</span>
+      </a>
+
+      <a
+        mat-list-item
+        routerLink="/tarefas"
+        routerLinkActive="ativo"
+        ariaCurrentWhenActive="page">
+        <mat-icon>check_circle</mat-icon>
+        <span>Tarefas</span>
+      </a>
+
+      <a
+        mat-list-item
+        routerLink="/relatorios"
+        routerLinkActive="ativo"
+        ariaCurrentWhenActive="page">
+        <mat-icon>bar_chart</mat-icon>
+        <span>Relatórios</span>
+      </a>
+
+      <a
+        mat-list-item
+        routerLink="/sobre"
+        routerLinkActive="ativo"
+        ariaCurrentWhenActive="page">
+        <mat-icon>info</mat-icon>
+        <span>Sobre</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar color="primary" class="toolbar">
+      <span>{{ title() }}</span>
+    </mat-toolbar>
+
+    <main class="conteudo">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
 ```
+
+---
+
+## `src/app/app.css`
+
+```css
+.sidenav-container {
+  min-height: 100vh;
+}
+
+.sidenav {
+  width: 240px;
+  border-right: 1px solid #d6d9e6;
+}
+
+.menu-titulo {
+  padding: 16px;
+  background-color: #f0f4ff;
+}
+
+.menu-titulo h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: center;
+  min-height: 64px;
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 8px rgba(40, 80, 160, 0.18);
+}
+
+.toolbar span {
+  text-align: center;
+}
+
+.conteudo {
+  padding: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+mat-nav-list a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+mat-nav-list a mat-icon {
+  margin-right: 8px;
+}
+
+.ativo {
+  background-color: #e8f0fe;
+  font-weight: 600;
+}
+```
+
+---
+
+## `src/app/app.routes.ts`
+
+```ts
+import { Routes } from '@angular/router';
+
+import { Home } from './pages/home/home';
+import { Estudantes } from './pages/estudantes/estudantes';
+import { Tarefas } from './pages/tarefas/tarefas';
+import { Relatorios } from './pages/relatorios/relatorios';
+import { Sobre } from './pages/sobre/sobre';
+
+export const routes: Routes = [
+  { path: '', component: Home },
+  { path: 'estudantes', component: Estudantes },
+  { path: 'tarefas', component: Tarefas },
+  { path: 'relatorios', component: Relatorios },
+  { path: 'sobre', component: Sobre },
+  { path: '**', redirectTo: '' }
+];
+```
+
+---
+
+## `src/app/app.config.ts`
+
+Use a versão compatível com o seu projeto.
+
+Se estiver assim:
+
+```ts
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZoneChangeDetection({ eventCoalescing: true })
+  ]
+};
+```
+
+atualize para:
+
+```ts
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { provideRouter } from '@angular/router';
+
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(routes)
+  ]
+};
+```
+
+Se o seu arquivo for mais simples, use:
+
+```ts
+import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
+
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes)
+  ]
+};
+```
+
+---
+
+## `src/app/models/tarefa.model.ts`
+
+```ts
+export type StatusTarefa = 'pendente' | 'em andamento' | 'concluida';
+
+export type PrioridadeTarefa = 'baixa' | 'media' | 'alta';
+
+export type Tarefa = {
+  id: number;
+  nome: string;
+  status: StatusTarefa;
+  prioridade: PrioridadeTarefa;
+};
+```
+
+---
+
+## `src/app/models/estudante.model.ts`
+
+```ts
+export type TurnoEstudante = 'matutino' | 'vespertino' | 'noturno';
+
+export type Estudante = {
+  id: number;
+  nome: string;
+  email: string;
+  curso: string;
+  turno: TurnoEstudante;
+};
+```
+
+---
+
+# Pontos principais para explicar aos alunos
+
+## 1. O componente `App` mudou de função
+
+Antes:
+
+```text
+App era a tela principal da aplicação.
+```
+
+Agora:
+
+```text
+App é o layout geral da aplicação.
+```
+
+Ele contém:
+
+```text
+menu lateral
+toolbar
+router-outlet
+```
+
+---
+
+## 2. As páginas são componentes
+
+Cada página é um componente Angular:
+
+```text
+Home
+Estudantes
+Tarefas
+Relatórios
+Sobre
+```
+
+A diferença é que esses componentes representam telas completas da aplicação.
+
+---
+
+## 3. Rotas conectam URLs a páginas
+
+Exemplo:
+
+```text
+/tarefas → Tarefas
+```
+
+A configuração fica em:
+
+```text
+app.routes.ts
+```
+
+---
+
+## 4. `RouterOutlet` exibe a página atual
+
+O conteúdo da rota ativa aparece aqui:
+
+```html
+<router-outlet />
+```
+
+---
+
+## 5. `RouterLink` navega sem recarregar a página
+
+Exemplo:
+
+```html
+<a routerLink="/estudantes">Estudantes</a>
+```
+
+---
+
+## 6. `RouterLinkActive` destaca o link atual
+
+Exemplo:
+
+```html
+routerLinkActive="ativo"
+```
+
+---
+
+## 7. `mat-sidenav` cria o menu lateral
+
+O menu lateral fica fixo e a área principal troca o conteúdo conforme a rota.
+
+---
+
+## 8. Tipagem forte evita valores inválidos
+
+Com:
+
+```ts
+export type StatusTarefa = 'pendente' | 'em andamento' | 'concluida';
+```
+
+o TypeScript impede valores como:
+
+```ts
+'finalizada'
+```
+
+Isso ajuda a reduzir erros no código.
+
+---
+
+# Atividade final da Aula 2
+
+Peça aos alunos para fazerem pelo menos duas melhorias:
+
+1. Alterar o texto da página inicial.
+2. Criar uma página chamada `perfil`.
+3. Adicionar o link `Perfil` no menu lateral.
+4. Criar um novo tipo chamado `Curso`.
+5. Adicionar uma tarefa de exemplo na página de tarefas.
+6. Adicionar um estudante de exemplo na página de estudantes.
+7. Alterar os ícones do menu lateral.
+8. Criar uma rota coringa para uma página “Não encontrada” em vez de redirecionar para Home.
 
 ---
 
 # Fechamento da aula
 
-Ao final, retome com os alunos:
+Ao final, retome:
 
-* Angular organiza a aplicação em componentes;
-* `app.ts` guarda dados e métodos;
-* `app.html` exibe a interface;
-* `app.css` estiliza a interface;
-* interpolação usa `{{ }}`;
-* evento de clique usa `(click)`;
-* signal é lido com parênteses;
-* `set` troca o valor diretamente;
-* `update` altera com base no valor anterior;
-* `computed` calcula um valor derivado;
-* componentes podem ser aninhados;
-* `input` permite receber dados do componente pai;
-* `@for` repete elementos;
-* `@if` mostra elementos de forma condicional.
+```text
+App agora é layout.
+As páginas são componentes.
+RouterOutlet mostra a página atual.
+RouterLink permite navegar.
+RouterLinkActive destaca a rota ativa.
+mat-sidenav cria o menu lateral.
+models guardam a estrutura dos dados.
+types tornam o domínio mais seguro.
+```
 
----
+Resultado final da Aula 2:
 
-# Perguntas para fixação
+```text
+Aplicação com layout principal, menu lateral, navegação entre páginas e modelos tipados.
+```
 
-1. O que é um componente no Angular?
-2. Para que serve o arquivo `app.ts`?
-3. Para que serve o arquivo `app.html`?
-4. Para que serve a interpolação `{{ }}`?
-5. O que faz o evento `(click)`?
-6. O que é um `signal`?
-7. Por que usamos `title()` e não apenas `title`?
-8. Qual a diferença entre `set` e `update`?
-9. Para que serve o `computed`?
-10. Como um componente pai envia dados para um componente filho?
-11. Para que serve o `@for`?
-12. Para que serve o `@if`?
+A aplicação agora está preparada para a Aula 3, na qual a página `/tarefas` será transformada em um CRUD de tarefas com formulário, validação visual e comunicação entre componentes.
 
----
-
-# Avaliação prática sugerida
-
-Solicite que os alunos entreguem uma aplicação Angular simples contendo:
-
-* pelo menos 2 componentes;
-* uso de interpolação;
-* uso de evento `(click)`;
-* pelo menos 3 signals;
-* pelo menos 1 computed;
-* uso de `set`;
-* uso de `update`;
-* lista com `@for`;
-* condição com `@if`;
-* CSS próprio nos componentes.
-
-Entrega sugerida:
-
-* link do repositório no GitHub;
-* print da aplicação funcionando;
-* breve descrição das funcionalidades implementadas.
-
-[1]: https://angular.dev/overview "What is Angular? • Angular"
-[2]: https://angular.dev/guide/signals "Signals • Overview • Angular"
-[3]: https://angular.dev/guide/components/inputs "Accepting data with input properties • Angular"
-[4]: https://angular.dev/guide/templates/control-flow "Control flow • Angular"
+[1]: https://angular.dev/guide/routing/router-reference?utm_source=chatgpt.com "Router reference"
+[2]: https://v18.angular.dev/guide/routing/router-tutorial/?utm_source=chatgpt.com "Routing in single-page applications"
+[3]: https://angular.dev/api/router/RouterLink?utm_source=chatgpt.com "RouterLink"
+[4]: https://angular.dev/api/router/RouterLinkActive?utm_source=chatgpt.com "RouterLinkActive"
+[5]: https://angular.dev/best-practices/a11y?utm_source=chatgpt.com "Accessibility"
