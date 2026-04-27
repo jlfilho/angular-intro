@@ -1,0 +1,9 @@
+.tarefa-card {
+  margin-bottom: 12px;
+  background-color: #f8f9ff;
+}
+
+mat-card-actions {
+  display: flex;
+  gap: 8px;
+}

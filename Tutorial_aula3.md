@@ -1,98 +1,1187 @@
-# Aula 3 — Outputs, validação e melhoria da componentização
+# Aula 3 — CRUD de tarefas com Forms, Outputs e Validação
 
 ## Tema
 
-Melhorar a comunicação entre componentes e validar o formulário de tarefas.
-
-## Objetivo geral
-
-Ao final da aula, o aluno deverá compreender como um componente filho pode enviar eventos para um componente pai usando `output()` e como validar formulários orientados por template com `ngModel`.
-
-A documentação atual do Angular apresenta os componentes como blocos fundamentais de uma aplicação, permitindo dividir a interface em partes menores, reutilizáveis e com responsabilidades claras. Também apresenta `input()` para receber dados e `output()` para emitir eventos para componentes pais. ([Angular][1])
+Criar a funcionalidade completa da página `/tarefas`, com **CRUD local**, **service com signal**, **formulário template-driven**, **validação visual** e **comunicação entre componente pai e componente filho**.
 
 ---
 
-# 1. Contexto da Aula 3
+## Objetivo da aula
 
-Nas aulas anteriores, a aplicação evoluiu para um CRUD local de tarefas.
+Construir o CRUD de tarefas dentro da página `/tarefas`, aproveitando a estrutura criada na Aula 2 e mantendo a continuidade com os recursos trabalhados na Aula 1.
 
-Atualmente, a aplicação já possui:
+Ao final da aula, o aluno deverá conseguir:
 
-```text
-src/app/app.ts
-src/app/app.html
-src/app/app.css
+* mover o componente `TarefaCard` para a pasta `components`;
+* atualizar imports após a movimentação de arquivos;
+* criar um `TarefaService`;
+* armazenar a lista de tarefas em um `signal`;
+* expor a lista como somente leitura com `asReadonly()`;
+* cadastrar tarefa;
+* editar tarefa;
+* cancelar edição;
+* remover tarefa;
+* criar formulário com `FormsModule`, `ngModel` e `ngSubmit`;
+* validar formulário com `ngForm`, `ngModel`, `required`, `minlength` e `mat-error`;
+* usar `input()` para enviar dados da página para o card;
+* usar `output()` para emitir eventos do card para a página;
+* usar `inject()` para injeção moderna de dependência.
 
-src/app/tarefa.ts
-src/app/tarefa.model.ts
+---
 
-src/app/tarefa-card/tarefa-card.ts
-src/app/tarefa-card/tarefa-card.html
-src/app/tarefa-card/tarefa-card.css
-```
+# 1. Duração da aula
 
-Na Aula 2, o componente `tarefa-card` apenas exibia os dados da tarefa:
+**4 horas**
 
-```text
-nome
-status
-prioridade
-```
-
-Os botões **Editar** e **Remover** estavam no componente pai, dentro de `app.html`.
-
-Nesta Aula 3, vamos melhorar isso.
-
-O componente filho `tarefa-card` passará a ter seus próprios botões:
-
-```text
-TarefaCard
-├── Exibe tarefa
-├── Botão Editar
-└── Botão Remover
-```
-
-Mas o componente filho **não vai editar nem remover diretamente**. Ele apenas vai avisar o componente pai que o usuário clicou em uma ação.
+|       Tempo | Etapa       | Atividade                                                            |
+| ----------: | ----------- | -------------------------------------------------------------------- |
+| 0h00 – 0h20 | Revisão     | Retomar Aula 1 e Aula 2                                              |
+| 0h20 – 0h45 | Refatoração | Mover `TarefaCard` para `components`                                 |
+| 0h45 – 1h20 | Service     | Criar `TarefaService` com `signal`                                   |
+| 1h20 – 2h10 | Formulário  | Criar formulário com `FormsModule`, `ngModel` e `ngSubmit`           |
+| 2h10 – 2h40 | Validação   | Adicionar `required`, `minlength`, `ngForm`, `ngModel` e `mat-error` |
+| 2h40 – 3h20 | Outputs     | Adicionar botões Editar e Remover no `TarefaCard`                    |
+| 3h20 – 3h50 | Integração  | Conectar página, service e componente filho                          |
+| 3h50 – 4h00 | Fechamento  | Testes, revisão e desafios                                           |
 
 ---
 
 # 2. Resultado esperado da aula
 
-Ao final da aula, a aplicação terá:
+Ao final da Aula 3, a aplicação deverá ter a seguinte estrutura principal:
 
-* componente `tarefa-card` com botões próprios;
-* comunicação filho → pai usando `output()`;
-* evento de edição emitido pelo componente filho;
-* evento de remoção emitido pelo componente filho;
-* formulário validado com `ngModel`;
-* campo obrigatório;
-* tamanho mínimo para o nome da tarefa;
-* mensagens de erro;
-* botão de envio desabilitado quando o formulário estiver inválido.
+```text
+src/app
+├── components
+│   └── tarefa-card
+│       ├── tarefa-card.ts
+│       ├── tarefa-card.html
+│       └── tarefa-card.css
+├── models
+│   └── tarefa.model.ts
+├── pages
+│   └── tarefas
+│       ├── tarefas.ts
+│       ├── tarefas.html
+│       └── tarefas.css
+├── services
+│   └── tarefa.ts
+├── app.ts
+├── app.html
+├── app.css
+└── app.routes.ts
+```
+
+A página `/tarefas` deverá permitir:
+
+```text
+Cadastrar tarefa
+Listar tarefas
+Editar tarefa
+Cancelar edição
+Remover tarefa
+Validar campos obrigatórios
+Validar tamanho mínimo
+Desabilitar envio inválido
+Exibir tarefas com TarefaCard
+Emitir eventos do TarefaCard para a página Tarefas
+```
 
 ---
 
-# 3. Organização da aula de 4 horas
+# 3. Módulo 1 — Revisão inicial
 
-| Tempo       | Etapa      | Conteúdo                              |
-| ----------- | ---------- | ------------------------------------- |
-| 0h00 – 0h20 | Revisão    | Revisar aplicação da Aula 2           |
-| 0h20 – 1h10 | Módulo 1   | `input()` x `output()`                |
-| 1h10 – 1h50 | Módulo 2   | Transferir botões para `tarefa-card`  |
-| 1h50 – 2h00 | Intervalo  | Pausa                                 |
-| 2h00 – 3h00 | Módulo 3   | Validação com `ngModel`               |
-| 3h00 – 3h40 | Módulo 4   | Melhorias visuais e mensagens de erro |
-| 3h40 – 4h00 | Fechamento | Revisão e desafio prático             |
+## Tempo sugerido
+
+20 minutos.
+
+## Explicação para iniciar a aula
+
+Explique aos alunos:
+
+> Na Aula 1, criamos uma lista de tarefas diretamente no componente principal da aplicação. Usamos signals, computed, eventos, `@for`, `@if` e um componente filho chamado `TarefaCard`.
+
+Depois:
+
+> Na Aula 2, reorganizamos a aplicação. O componente `App` deixou de ser a tela principal da lista de tarefas e passou a ser o layout geral do sistema, com menu lateral, toolbar e `router-outlet`.
+
+Agora:
+
+> Na Aula 3, vamos transformar a página `/tarefas` em uma funcionalidade real, com service, formulário, validação, edição, remoção e comunicação entre componente pai e filho.
+
+Mostre a evolução:
+
+```text
+Aula 1
+App controlava diretamente a lista de tarefas.
+
+Aula 2
+App virou layout.
+Tarefas virou uma página.
+Foram criadas pastas como pages, components, services e models.
+
+Aula 3
+A página /tarefas terá CRUD local com service, signal, formulário e output.
+```
 
 ---
 
-# 4. Ponto de partida
+# 4. Módulo 2 — Mover o TarefaCard para components
 
-Entre na pasta do projeto:
+## Tempo sugerido
+
+25 minutos.
+
+Na Aula 1, o `TarefaCard` foi criado em:
+
+```text
+src/app/tarefa-card
+```
+
+Na Aula 2, criamos a pasta:
+
+```text
+src/app/components
+```
+
+Agora vamos mover o componente para essa pasta, deixando a estrutura mais organizada.
+
+---
+
+## Passo 1 — Conferir a estrutura atual
+
+Antes da movimentação, o projeto deve estar parecido com isto:
+
+```text
+src/app
+├── tarefa-card
+│   ├── tarefa-card.ts
+│   ├── tarefa-card.html
+│   └── tarefa-card.css
+├── pages
+├── components
+├── services
+├── models
+└── app.ts
+```
+
+---
+
+## Passo 2 — Mover a pasta
+
+No terminal, dentro da pasta do projeto, execute:
 
 ```bash
-cd aula-angular-tarefas
+mv src/app/tarefa-card src/app/components/tarefa-card
 ```
+
+No Windows PowerShell:
+
+```powershell
+Move-Item src/app/tarefa-card src/app/components/tarefa-card
+```
+
+Também é possível fazer pelo VS Code:
+
+1. Abrir a pasta `src/app`.
+2. Arrastar a pasta `tarefa-card`.
+3. Soltar dentro de `src/app/components`.
+
+Depois da movimentação, a estrutura ficará assim:
+
+```text
+src/app
+├── components
+│   └── tarefa-card
+│       ├── tarefa-card.ts
+│       ├── tarefa-card.html
+│       └── tarefa-card.css
+├── pages
+├── services
+├── models
+└── app.ts
+```
+
+---
+
+## Passo 3 — Remover imports antigos no `app.ts`
+
+Na Aula 1, o `App` importava o `TarefaCard` assim:
+
+```ts
+import { TarefaCard } from './tarefa-card/tarefa-card';
+```
+
+Mas, na Aula 2, o `App` virou o layout principal da aplicação. Então ele não deve mais importar diretamente o `TarefaCard`, pois quem usará esse componente agora será a página `Tarefas`.
+
+Se ainda existir no `app.ts`, remova:
+
+```ts
+import { TarefaCard } from './tarefa-card/tarefa-card';
+```
+
+E remova também `TarefaCard` do array `imports`.
+
+O `App` deve continuar responsável apenas pelo layout com menu lateral, toolbar e `router-outlet`.
+
+---
+
+# 5. Módulo 3 — Conferir o modelo de tarefa
+
+## Tempo sugerido
+
+10 minutos.
+
+Abra:
+
+```text
+src/app/models/tarefa.model.ts
+```
+
+O conteúdo deve ser:
+
+```ts
+export type StatusTarefa = 'pendente' | 'em andamento' | 'concluida';
+
+export type PrioridadeTarefa = 'baixa' | 'media' | 'alta';
+
+export type Tarefa = {
+  id: number;
+  nome: string;
+  status: StatusTarefa;
+  prioridade: PrioridadeTarefa;
+};
+```
+
+## Explicação
+
+Explique que o modelo define quais dados uma tarefa possui.
+
+O campo `status` só aceita:
+
+```ts
+'pendente'
+'em andamento'
+'concluida'
+```
+
+O campo `prioridade` só aceita:
+
+```ts
+'baixa'
+'media'
+'alta'
+```
+
+Por isso, este objeto é válido:
+
+```ts
+const tarefa: Tarefa = {
+  id: 1,
+  nome: 'Estudar rotas',
+  status: 'pendente',
+  prioridade: 'alta'
+};
+```
+
+Mas este objeto está errado:
+
+```ts
+const tarefa: Tarefa = {
+  id: 1,
+  nome: 'Estudar rotas',
+  status: 'finalizada',
+  prioridade: 'alta'
+};
+```
+
+Porque:
+
+```ts
+'finalizada'
+```
+
+não pertence ao tipo:
+
+```ts
+StatusTarefa
+```
+
+---
+
+# 6. Módulo 4 — Criar o service de tarefas com signal
+
+## Tempo sugerido
+
+35 minutos.
+
+Agora vamos mover a responsabilidade da lista de tarefas para um service.
+
+Na Aula 2, a página `Tarefas` tinha uma lista local com `signal<Tarefa[]>`.
+
+Agora, a lista ficará em:
+
+```text
+src/app/services/tarefa.ts
+```
+
+---
+
+## Passo 1 — Criar o service
+
+No terminal:
+
+```bash
+ng generate service services/tarefa.service --skip-tests
+```
+
+Ou:
+
+```bash
+ng g s services/tarefa.service --skip-tests
+```
+
+Dependendo da versão do Angular CLI, o arquivo pode ser criado como:
+
+```text
+src/app/services/tarefa.ts
+```
+
+ou:
+
+```text
+src/app/services/tarefa.service.ts
+```
+
+Neste tutorial, vamos usar:
+
+```text
+src/app/services/tarefa.ts
+```
+
+Se o seu projeto gerar `tarefa.service.ts`, basta ajustar o caminho do import depois.
+
+---
+
+## Passo 2 — Implementar o `TarefaService`
+
+Abra:
+
+```text
+src/app/services/tarefa.service.ts
+```
+
+Substitua o conteúdo por:
+
+```ts
+import { Injectable, Signal, signal } from '@angular/core';
+
+import { Tarefa } from '../models/tarefa.model';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class TarefaService {
+  private readonly tarefas = signal<Tarefa[]>([
+    {
+      id: 1,
+      nome: 'Reestruturar aplicação Angular',
+      status: 'pendente',
+      prioridade: 'alta'
+    },
+    {
+      id: 2,
+      nome: 'Criar menu lateral',
+      status: 'em andamento',
+      prioridade: 'media'
+    }
+  ]);
+
+  private proximoId = 3;
+
+  listar(): Signal<Tarefa[]> {
+    return this.tarefas.asReadonly();
+  }
+
+  buscarPorId(id: number): Tarefa | undefined {
+    return this.tarefas().find(tarefa => tarefa.id === id);
+  }
+
+  cadastrar(tarefa: Omit<Tarefa, 'id'>): void {
+    const novaTarefa: Tarefa = {
+      id: this.proximoId,
+      nome: tarefa.nome,
+      status: tarefa.status,
+      prioridade: tarefa.prioridade
+    };
+
+    this.tarefas.update(listaAtual => [
+      ...listaAtual,
+      novaTarefa
+    ]);
+
+    this.proximoId++;
+  }
+
+  editar(id: number, tarefaAtualizada: Omit<Tarefa, 'id'>): void {
+    this.tarefas.update(listaAtual =>
+      listaAtual.map(tarefa =>
+        tarefa.id === id
+          ? {
+            id,
+            nome: tarefaAtualizada.nome,
+            status: tarefaAtualizada.status,
+            prioridade: tarefaAtualizada.prioridade
+          }
+          : tarefa
+      )
+    );
+  }
+
+  remover(id: number): void {
+    this.tarefas.update(listaAtual =>
+      listaAtual.filter(tarefa => tarefa.id !== id)
+    );
+  }
+}
+```
+
+---
+
+## Explicação didática
+
+Na Aula 1, os alunos viram uma lista assim:
+
+```ts
+tarefas = signal<Tarefa[]>([]);
+```
+
+Agora a lista continua sendo `signal`, mas fica dentro de um service:
+
+```ts
+private readonly tarefas = signal<Tarefa[]>([]);
+```
+
+A palavra `private` significa que a lista só pode ser alterada dentro do próprio service.
+
+A palavra `readonly` indica que a referência dessa propriedade não será trocada por outra.
+
+A página acessa a lista por este método:
+
+```ts
+listar(): Signal<Tarefa[]> {
+  return this.tarefas.asReadonly();
+}
+```
+
+O `asReadonly()` retorna uma versão somente leitura do signal. Pela documentação do Angular, um readonly signal pode ser lido, mas não pode ser alterado com `set` ou `update` fora do local onde o signal gravável foi criado. ([Angular][2])
+
+A página não poderá fazer isso:
+
+```ts
+this.tarefas.update(...)
+```
+
+Ela precisará chamar métodos do service:
+
+```ts
+this.tarefaService.cadastrar(...)
+this.tarefaService.editar(...)
+this.tarefaService.remover(...)
+```
+
+Essa separação é importante porque:
+
+```text
+Página → cuida da interface
+Service → cuida dos dados e regras de alteração
+```
+
+---
+
+# 7. Módulo 5 — Atualizar a página de tarefas
+
+## Tempo sugerido
+
+50 minutos.
+
+Abra:
+
+```text
+src/app/pages/tarefas/tarefas.ts
+```
+
+Na Aula 2, esse arquivo provavelmente tinha uma lista local assim:
+
+```ts
+tarefas = signal<Tarefa[]>([
+  ...
+]);
+```
+
+Agora vamos remover essa lista local e usar o `TarefaService`.
+
+---
+
+## Código completo de `tarefas.ts`
+
+```ts
+import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+
+import {
+  PrioridadeTarefa,
+  StatusTarefa
+} from '../../models/tarefa.model';
+
+import { TarefaService } from '../../services/tarefa.service';
+import { TarefaCard } from '../../components/tarefa-card/tarefa-card';
+
+@Component({
+  selector: 'app-tarefas',
+  imports: [
+    FormsModule,
+    MatButtonModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    TarefaCard
+  ],
+  templateUrl: './tarefas.html',
+  styleUrl: './tarefas.css'
+})
+export class Tarefas {
+  private readonly tarefaService = inject(TarefaService);
+
+  tarefas = this.tarefaService.listar();
+
+  novoNome = '';
+  novoStatus: StatusTarefa = 'pendente';
+  novaPrioridade: PrioridadeTarefa = 'media';
+
+  idEmEdicao: number | null = null;
+
+  salvarFormulario(): void {
+    const dadosFormulario = {
+      nome: this.novoNome,
+      status: this.novoStatus,
+      prioridade: this.novaPrioridade
+    };
+
+    if (this.idEmEdicao === null) {
+      this.tarefaService.cadastrar(dadosFormulario);
+    } else {
+      this.tarefaService.editar(this.idEmEdicao, dadosFormulario);
+    }
+
+    this.limparFormulario();
+  }
+
+  editarTarefaPorId(id: number): void {
+    const tarefa = this.tarefaService.buscarPorId(id);
+
+    if (tarefa) {
+      this.idEmEdicao = tarefa.id;
+      this.novoNome = tarefa.nome;
+      this.novoStatus = tarefa.status;
+      this.novaPrioridade = tarefa.prioridade;
+    }
+  }
+
+  removerTarefa(id: number): void {
+    this.tarefaService.remover(id);
+
+    if (this.idEmEdicao === id) {
+      this.limparFormulario();
+    }
+  }
+
+  cancelarEdicao(): void {
+    this.limparFormulario();
+  }
+
+  private limparFormulario(): void {
+    this.idEmEdicao = null;
+    this.novoNome = '';
+    this.novoStatus = 'pendente';
+    this.novaPrioridade = 'media';
+  }
+}
+```
+
+---
+
+## Explicação sobre `inject()`
+
+A forma tradicional seria:
+
+```ts
+constructor(private tarefaService: TarefaService) {}
+```
+
+Nesta aula, vamos usar a forma moderna:
+
+```ts
+private readonly tarefaService = inject(TarefaService);
+```
+
+A documentação oficial informa que `inject()` pode ser usado em inicializadores de campos de classes criadas pelo sistema de injeção do Angular, como componentes e services. ([Angular][3])
+
+Explique aos alunos:
+
+> O `inject()` permite obter uma dependência diretamente em uma propriedade da classe. Assim, não precisamos criar um construtor apenas para injetar um service.
+
+---
+
+## Atenção ao import do service
+
+Se o arquivo criado foi:
+
+```text
+src/app/services/tarefa.ts
+```
+
+use:
+
+```ts
+import { TarefaService } from '../../services/tarefa';
+```
+
+Se o arquivo criado foi:
+
+```text
+src/app/services/tarefa.service.ts
+```
+
+use:
+
+```ts
+import { TarefaService } from '../../services/tarefa.service';
+```
+
+---
+
+## Atenção ao import do TarefaCard
+
+Como movemos o card para `components`, o import correto é:
+
+```ts
+import { TarefaCard } from '../../components/tarefa-card/tarefa-card';
+```
+
+Não use mais:
+
+```ts
+import { TarefaCard } from '../../tarefa-card/tarefa-card';
+```
+
+Esse era o caminho antigo da Aula 1.
+
+---
+
+# 8. Módulo 6 — Criar o formulário com Template-driven Forms
+
+## Tempo sugerido
+
+45 minutos.
+
+Abra:
+
+```text
+src/app/pages/tarefas/tarefas.html
+```
+
+Substitua o conteúdo por:
+
+```html
+<h1>Tarefas</h1>
+
+<p>
+  Cadastre, edite e remova tarefas de estudo.
+</p>
+
+<mat-card class="formulario-card">
+  <mat-card-header>
+    <mat-card-title>
+      @if (idEmEdicao === null) {
+        Nova tarefa
+      } @else {
+        Editar tarefa
+      }
+    </mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <form #formTarefa="ngForm" (ngSubmit)="salvarFormulario()">
+      <mat-form-field appearance="outline" class="campo">
+        <mat-label>Nome da tarefa</mat-label>
+
+        <input
+          matInput
+          name="nome"
+          [(ngModel)]="novoNome"
+          required
+          minlength="3"
+          #nome="ngModel"
+        />
+
+        @if (nome.invalid && nome.touched) {
+          @if (nome.errors?.['required']) {
+            <mat-error>O nome da tarefa é obrigatório.</mat-error>
+          }
+
+          @if (nome.errors?.['minlength']) {
+            <mat-error>O nome deve ter pelo menos 3 caracteres.</mat-error>
+          }
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="campo">
+        <mat-label>Status</mat-label>
+
+        <mat-select
+          name="status"
+          [(ngModel)]="novoStatus"
+          required
+          #status="ngModel"
+        >
+          <mat-option value="pendente">Pendente</mat-option>
+          <mat-option value="em andamento">Em andamento</mat-option>
+          <mat-option value="concluida">Concluída</mat-option>
+        </mat-select>
+
+        @if (status.invalid && status.touched) {
+          <mat-error>O status é obrigatório.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="campo">
+        <mat-label>Prioridade</mat-label>
+
+        <mat-select
+          name="prioridade"
+          [(ngModel)]="novaPrioridade"
+          required
+          #prioridade="ngModel"
+        >
+          <mat-option value="baixa">Baixa</mat-option>
+          <mat-option value="media">Média</mat-option>
+          <mat-option value="alta">Alta</mat-option>
+        </mat-select>
+
+        @if (prioridade.invalid && prioridade.touched) {
+          <mat-error>A prioridade é obrigatória.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="acoes-formulario">
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="formTarefa.invalid"
+        >
+          @if (idEmEdicao === null) {
+            Cadastrar
+          } @else {
+            Salvar alterações
+          }
+        </button>
+
+        @if (idEmEdicao !== null) {
+          <button
+            mat-button
+            color="warn"
+            type="button"
+            (click)="cancelarEdicao()"
+          >
+            Cancelar edição
+          </button>
+        }
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>
+
+<section class="lista-tarefas">
+  <h2>Tarefas cadastradas</h2>
+
+  @if (tarefas().length === 0) {
+    <p>Nenhuma tarefa cadastrada.</p>
+  } @else {
+    @for (tarefa of tarefas(); track tarefa.id) {
+      <app-tarefa-card
+        [id]="tarefa.id"
+        [nome]="tarefa.nome"
+        [status]="tarefa.status"
+        [prioridade]="tarefa.prioridade"
+        (editar)="editarTarefaPorId($event)"
+        (remover)="removerTarefa($event)"
+      />
+    }
+  }
+</section>
+```
+
+---
+
+## Explicação do formulário
+
+A linha:
+
+```html
+<form #formTarefa="ngForm" (ngSubmit)="salvarFormulario()">
+```
+
+cria uma referência ao formulário.
+
+Com isso, conseguimos verificar se o formulário está inválido:
+
+```html
+formTarefa.invalid
+```
+
+O botão usa:
+
+```html
+[disabled]="formTarefa.invalid"
+```
+
+Assim, enquanto houver erro no formulário, o botão permanece desabilitado.
+
+O `ngModel` liga o campo HTML à propriedade TypeScript:
+
+```html
+[(ngModel)]="novoNome"
+```
+
+A documentação de formulários template-driven do Angular apresenta esse modelo como uma abordagem na qual a estrutura do formulário é conduzida principalmente pelo template, usando diretivas como `ngModel`. ([Angular][4])
+
+---
+
+## Por que os campos do formulário não são signals?
+
+Nesta aula, a lista de tarefas é o estado principal da funcionalidade. Por isso, ela fica como `signal` no service.
+
+Já os campos do formulário ficam como propriedades simples:
+
+```ts
+novoNome = '';
+novoStatus: StatusTarefa = 'pendente';
+novaPrioridade: PrioridadeTarefa = 'media';
+```
+
+Isso facilita o uso de:
+
+```html
+[(ngModel)]
+```
+
+A divisão didática fica clara:
+
+```text
+Lista de tarefas → signal no service
+Campos do formulário → propriedades simples com ngModel
+```
+
+---
+
+# 9. Módulo 7 — Estilizar a página de tarefas
+
+## Tempo sugerido
+
+15 minutos.
+
+Abra:
+
+```text
+src/app/pages/tarefas/tarefas.css
+```
+
+Substitua ou complemente com:
+
+```css
+.formulario-card {
+  margin-bottom: 24px;
+  padding: 8px;
+}
+
+.campo {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.acoes-formulario {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.lista-tarefas {
+  margin-top: 24px;
+}
+
+.lista-tarefas h2 {
+  margin-bottom: 16px;
+}
+```
+
+---
+
+# 10. Módulo 8 — Atualizar o TarefaCard com input e output
+
+## Tempo sugerido
+
+40 minutos.
+
+Agora vamos editar o componente que foi movido para:
+
+```text
+src/app/components/tarefa-card
+```
+
+Antes, ele apenas exibia dados.
+
+Agora, ele terá:
+
+```text
+TarefaCard
+├── Exibe nome da tarefa
+├── Exibe status
+├── Exibe prioridade
+├── Botão Editar
+└── Botão Remover
+```
+
+---
+
+## Atualizar `tarefa-card.ts`
+
+Abra:
+
+```text
+src/app/components/tarefa-card/tarefa-card.ts
+```
+
+Substitua por:
+
+```ts
+import { Component, input, output } from '@angular/core';
+
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+
+import {
+  PrioridadeTarefa,
+  StatusTarefa
+} from '../../models/tarefa.model';
+
+@Component({
+  selector: 'app-tarefa-card',
+  imports: [
+    MatCardModule,
+    MatButtonModule
+  ],
+  templateUrl: './tarefa-card.html',
+  styleUrl: './tarefa-card.css'
+})
+export class TarefaCard {
+  id = input.required<number>();
+  nome = input.required<string>();
+  status = input<StatusTarefa>('pendente');
+  prioridade = input.required<PrioridadeTarefa>();
+
+  editar = output<number>();
+  remover = output<number>();
+
+  aoClicarEditar(): void {
+    this.editar.emit(this.id());
+  }
+
+  aoClicarRemover(): void {
+    this.remover.emit(this.id());
+  }
+}
+```
+
+---
+
+## Explicação sobre `input()`
+
+Os dados entram no componente filho por meio de `input()`:
+
+```ts
+nome = input.required<string>();
+```
+
+A página pai envia os dados assim:
+
+```html
+<app-tarefa-card
+  [nome]="tarefa.nome"
+/>
+```
+
+Como o `input()` funciona como signal, no HTML do componente filho a leitura será:
+
+```html
+{{ nome() }}
+```
+
+---
+
+## Explicação sobre `output()`
+
+Os eventos saem do componente filho por meio de `output()`:
+
+```ts
+editar = output<number>();
+remover = output<number>();
+```
+
+Quando o usuário clica em **Editar**, o componente filho emite o id da tarefa:
+
+```ts
+this.editar.emit(this.id());
+```
+
+A página pai escuta esse evento:
+
+```html
+(editar)="editarTarefaPorId($event)"
+```
+
+A documentação atual do Angular explica que `output()` cria eventos customizados de componentes e que o valor emitido pode ser acessado no template do pai por meio de `$event`. ([Angular][5])
+
+---
+
+# 11. Atualizar o HTML do TarefaCard
+
+Abra:
+
+```text
+src/app/components/tarefa-card/tarefa-card.html
+```
+
+Substitua por:
+
+```html
+<mat-card class="tarefa-card">
+  <mat-card-header>
+    <mat-card-title>{{ nome() }}</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <p>
+      <strong>Status:</strong>
+      @if (status() === 'pendente') {
+        Pendente
+      } @else if (status() === 'em andamento') {
+        Em andamento
+      } @else {
+        Concluída
+      }
+    </p>
+
+    <p>
+      <strong>Prioridade:</strong>
+      @if (prioridade() === 'baixa') {
+        Baixa
+      } @else if (prioridade() === 'media') {
+        Média
+      } @else {
+        Alta
+      }
+    </p>
+  </mat-card-content>
+
+  <mat-card-actions>
+    <button
+      mat-button
+      color="primary"
+      type="button"
+      (click)="aoClicarEditar()"
+    >
+      Editar
+    </button>
+
+    <button
+      mat-button
+      color="warn"
+      type="button"
+      (click)="aoClicarRemover()"
+    >
+      Remover
+    </button>
+  </mat-card-actions>
+</mat-card>
+```
+
+---
+
+## Explicação importante
+
+Como estamos usando `input()`, as propriedades do card são lidas como signals.
+
+Correto:
+
+```html
+{{ nome() }}
+```
+
+Errado:
+
+```html
+{{ nome }}
+```
+
+O mesmo vale para:
+
+```html
+status()
+prioridade()
+id()
+```
+
+---
+
+# 12. Atualizar o CSS do TarefaCard
+
+Abra:
+
+```text
+src/app/components/tarefa-card/tarefa-card.css
+```
+
+Substitua por:
+
+```css
+.tarefa-card {
+  margin-bottom: 12px;
+  background-color: #f8f9ff;
+}
+
+mat-card-actions {
+  display: flex;
+  gap: 8px;
+}
+```
+
+---
+
+# 13. Módulo 9 — Testar a integração
+
+## Tempo sugerido
+
+30 minutos.
 
 Execute:
 
@@ -100,1142 +1189,46 @@ Execute:
 ng serve
 ```
 
-Abra no navegador:
+Acesse:
 
 ```text
-http://localhost:4200
+http://localhost:4200/tarefas
 ```
 
 ---
 
-# Módulo 1 — Entendendo `input()` e `output()`
+## Teste 1 — Rota `/tarefas`
 
-## Tempo sugerido
+Resultado esperado:
 
-**50 minutos**
+A página de tarefas abre dentro do layout criado na Aula 2.
 
-## Objetivo
-
-Entender a diferença entre dados que entram em um componente e eventos que saem dele.
-
----
-
-## 1.1 Revisão do `input()`
-
-Na Aula 1 e na Aula 2, usamos `input()` no componente `tarefa-card`.
-
-Abra:
+Deve aparecer:
 
 ```text
-src/app/tarefa-card/tarefa-card.ts
+Tarefas
+Cadastre, edite e remova tarefas de estudo.
 ```
 
-O componente provavelmente está parecido com este:
+---
 
-```ts
-import { Component, input } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
+## Teste 2 — Tarefas iniciais
 
-@Component({
-  selector: 'app-tarefa-card',
-  imports: [MatCardModule],
-  templateUrl: './tarefa-card.html',
-  styleUrl: './tarefa-card.css'
-})
-export class TarefaCard {
-  nome = input.required<string>();
-  status = input('pendente');
-  prioridade = input('média');
-}
-```
-
-O `input()` permite que o componente pai envie dados para o componente filho. A documentação oficial explica que inputs são propriedades que permitem passar dados para componentes, e que podem ser lidas no template como signals quando usamos a API baseada em `input()`. ([Angular][2])
-
-Exemplo no componente pai:
-
-```html
-<app-tarefa-card
-  [nome]="tarefa.nome"
-  [status]="tarefa.status"
-  [prioridade]="tarefa.prioridade" />
-```
-
-Fluxo:
+Devem aparecer as tarefas iniciais vindas do service:
 
 ```text
-App → TarefaCard
-```
-
-Ou seja:
-
-```text
-Pai envia dados para o filho.
+Reestruturar aplicação Angular
+Criar menu lateral
 ```
 
 ---
 
-## 1.2 Agora entra o `output()`
-
-O `output()` faz o caminho inverso.
-
-Ele permite que o componente filho envie um evento para o componente pai.
-
-A documentação atual do Angular define `output()` como uma função usada para declarar saídas em componentes e diretivas; essas saídas podem emitir valores para componentes pais, que escutam os eventos usando binding no template. ([Angular][3])
-
-Fluxo:
-
-```text
-TarefaCard → App
-```
-
-Ou seja:
-
-```text
-Filho avisa o pai que algo aconteceu.
-```
-
-Exemplo conceitual:
-
-```ts
-remover = output<number>();
-```
-
-O componente filho pode emitir:
-
-```ts
-this.remover.emit(1);
-```
-
-O componente pai pode escutar:
-
-```html
-<app-tarefa-card (remover)="removerTarefa($event)" />
-```
-
----
-
-## 1.3 Diferença principal
-
-Explique aos alunos:
-
-```text
-input  → o pai envia dados para o filho
-output → o filho envia eventos para o pai
-```
-
-Exemplo prático na nossa aplicação:
-
-```text
-input:
-App envia nome, status e prioridade para TarefaCard.
-
-output:
-TarefaCard avisa App que o usuário clicou em Editar ou Remover.
-```
-
----
-
-# Módulo 2 — Transferir botões para o componente `tarefa-card`
-
-## Tempo sugerido
-
-**40 minutos**
-
-## Objetivo
-
-Melhorar a componentização, movendo os botões **Editar** e **Remover** para dentro do componente `tarefa-card`.
-
----
-
-## 2.1 Atualizar o componente `tarefa-card.ts`
-
-Abra:
-
-```text
-src/app/tarefa-card/tarefa-card.ts
-```
-
-Substitua o conteúdo por:
-
-```ts
-import { Component, input, output } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-
-@Component({
-  selector: 'app-tarefa-card',
-  imports: [MatCardModule, MatButtonModule],
-  templateUrl: './tarefa-card.html',
-  styleUrl: './tarefa-card.css'
-})
-export class TarefaCard {
-  id = input.required<number>();
-  nome = input.required<string>();
-  status = input('pendente');
-  prioridade = input('média');
-
-  editar = output<number>();
-  remover = output<number>();
-
-  aoEditar() {
-    this.editar.emit(this.id());
-  }
-
-  aoRemover() {
-    this.remover.emit(this.id());
-  }
-}
-```
-
-## Explicação
-
-Agora o componente recebe também o `id` da tarefa:
-
-```ts
-id = input.required<number>();
-```
-
-Isso é necessário porque, ao clicar em **Editar** ou **Remover**, o componente filho precisa informar ao pai qual tarefa foi escolhida.
-
-Criamos dois outputs:
-
-```ts
-editar = output<number>();
-remover = output<number>();
-```
-
-Eles emitem um número, que será o `id` da tarefa.
-
-Quando clicar em editar:
-
-```ts
-aoEditar() {
-  this.editar.emit(this.id());
-}
-```
-
-Quando clicar em remover:
-
-```ts
-aoRemover() {
-  this.remover.emit(this.id());
-}
-```
-
----
-
-## 2.2 Atualizar o template `tarefa-card.html`
-
-Abra:
-
-```text
-src/app/tarefa-card/tarefa-card.html
-```
-
-Substitua por:
-
-```html
-<mat-card class="card">
-  <mat-card-title>{{ nome() }}</mat-card-title>
-
-  <mat-card-content>
-    <p>Status: {{ status() }}</p>
-    <p>Prioridade: {{ prioridade() }}</p>
-  </mat-card-content>
-
-  <mat-card-actions class="acoes-card">
-    <button mat-button type="button" (click)="aoEditar()">
-      Editar
-    </button>
-
-    <button mat-button type="button" (click)="aoRemover()">
-      Remover
-    </button>
-  </mat-card-actions>
-</mat-card>
-```
-
-## Explicação
-
-Agora os botões estão dentro do próprio card da tarefa.
-
-Antes:
-
-```text
-App tinha os botões Editar e Remover.
-```
-
-Agora:
-
-```text
-TarefaCard tem os botões Editar e Remover.
-```
-
-Mas a lógica de editar e remover ainda continua no componente pai.
-
----
-
-## 2.3 Atualizar o estilo do card
-
-Abra:
-
-```text
-src/app/tarefa-card/tarefa-card.css
-```
-
-Substitua por:
-
-```css
-.card {
-  width: 100%;
-}
-
-.acoes-card {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-```
-
----
-
-## 2.4 Atualizar o `app.html`
-
-Agora vamos remover os botões que estavam no componente pai.
-
-Abra:
-
-```text
-src/app/app.html
-```
-
-Procure esta parte da listagem, que provavelmente está assim:
-
-```html
-<div class="item-lista">
-  <app-tarefa-card
-    [nome]="tarefa.nome"
-    [status]="tarefa.status"
-    [prioridade]="tarefa.prioridade" />
-
-  <div class="botoes-item">
-    <button mat-button type="button" (click)="editarTarefa(tarefa)">
-      Editar
-    </button>
-
-    <button mat-button type="button" (click)="removerTarefa(tarefa.id)">
-      Remover
-    </button>
-  </div>
-</div>
-```
-
-Substitua por:
-
-```html
-<div class="item-lista">
-  <app-tarefa-card
-    [id]="tarefa.id"
-    [nome]="tarefa.nome"
-    [status]="tarefa.status"
-    [prioridade]="tarefa.prioridade"
-    (editar)="editarTarefaPorId($event)"
-    (remover)="removerTarefa($event)" />
-</div>
-```
-
-## Explicação
-
-Agora passamos o `id` da tarefa para o componente filho:
-
-```html
-[id]="tarefa.id"
-```
-
-E escutamos os eventos emitidos pelo filho:
-
-```html
-(editar)="editarTarefaPorId($event)"
-```
-
-```html
-(remover)="removerTarefa($event)"
-```
-
-O `$event` representa o valor enviado pelo componente filho. Neste caso, será o `id` da tarefa.
-
----
-
-## 2.5 Atualizar o `app.ts`
-
-Abra:
-
-```text
-src/app/app.ts
-```
-
-Na Aula 2, provavelmente havia um método assim:
-
-```ts
-editarTarefa(tarefa: Tarefa) {
-  this.tarefaEmEdicaoId = tarefa.id;
-  this.novoNome = tarefa.nome;
-  this.novoStatus = tarefa.status;
-  this.novaPrioridade = tarefa.prioridade;
-}
-```
-
-Vamos manter esse método, mas criar outro para editar por `id`.
-
-Adicione este método:
-
-```ts
-editarTarefaPorId(id: number) {
-  const tarefa = this.tarefaService.buscarPorId(id);
-
-  if (!tarefa) {
-    return;
-  }
-
-  this.editarTarefa(tarefa);
-}
-```
-
-Com isso, quando o `tarefa-card` emitir o `id`, o componente pai buscará a tarefa e chamará o método de edição.
-
----
-
-# Módulo 3 — Validação com `ngModel`
-
-## Tempo sugerido
-
-**1 hora**
-
-## Objetivo
-
-Validar o formulário de tarefas com campos obrigatórios, tamanho mínimo e mensagens de erro.
-
-Na Aula 2 usamos `[(ngModel)]` para ligação bidirecional. A documentação oficial explica que, em formulários orientados por template, o `NgModel` cria e gerencia o controle do formulário, e que é possível exportar o `NgModel` para uma variável local do template para verificar estados como válido, inválido, tocado ou alterado. ([Angular][4])
-
----
-
-## 3.1 Atualizar o formulário com referência local
-
-No `app.html`, encontre:
-
-```html
-<form (ngSubmit)="salvarFormulario()">
-```
-
-Substitua por:
-
-```html
-<form #formTarefa="ngForm" (ngSubmit)="salvarFormulario()">
-```
-
-## Explicação
-
-Agora o formulário tem uma referência chamada:
-
-```html
-#formTarefa="ngForm"
-```
-
-Ela permite verificar se o formulário está válido ou inválido.
-
-Exemplo:
-
-```html
-[disabled]="formTarefa.invalid"
-```
-
----
-
-## 3.2 Validar o campo nome
-
-Procure o campo de nome da tarefa:
-
-```html
-<input
-  matInput
-  name="nome"
-  type="text"
-  [(ngModel)]="novoNome"
-  placeholder="Ex.: Estudar Angular Material"
-  required>
-```
-
-Substitua por:
-
-```html
-<input
-  matInput
-  name="nome"
-  type="text"
-  [(ngModel)]="novoNome"
-  placeholder="Ex.: Estudar Angular Material"
-  required
-  minlength="3"
-  #nome="ngModel">
-```
-
-## Explicação
-
-Adicionamos:
-
-```html
-required
-```
-
-O campo passa a ser obrigatório.
-
-Adicionamos:
-
-```html
-minlength="3"
-```
-
-O campo precisa ter pelo menos 3 caracteres.
-
-Adicionamos:
-
-```html
-#nome="ngModel"
-```
-
-Isso permite acessar o estado do campo no template.
-
-A documentação oficial do Angular informa que o `required` adiciona um validador obrigatório ao controle marcado com esse atributo. ([Angular][5])
-
----
-
-## 3.3 Adicionar mensagens de erro do nome
-
-Logo abaixo do `input`, dentro do mesmo `mat-form-field`, adicione:
-
-```html
-@if (nome.invalid && nome.touched) {
-  @if (nome.errors?.['required']) {
-    <mat-error>O nome da tarefa é obrigatório.</mat-error>
-  }
-
-  @if (nome.errors?.['minlength']) {
-    <mat-error>O nome deve ter pelo menos 3 caracteres.</mat-error>
-  }
-}
-```
-
-O trecho completo ficará assim:
-
-```html
-<mat-form-field appearance="outline" class="campo-completo">
-  <mat-label>Nome da tarefa</mat-label>
-
-  <input
-    matInput
-    name="nome"
-    type="text"
-    [(ngModel)]="novoNome"
-    placeholder="Ex.: Estudar Angular Material"
-    required
-    minlength="3"
-    #nome="ngModel">
-
-  @if (nome.invalid && nome.touched) {
-    @if (nome.errors?.['required']) {
-      <mat-error>O nome da tarefa é obrigatório.</mat-error>
-    }
-
-    @if (nome.errors?.['minlength']) {
-      <mat-error>O nome deve ter pelo menos 3 caracteres.</mat-error>
-    }
-  }
-</mat-form-field>
-```
-
----
-
-## 3.4 Validar o campo status
-
-Procure o campo de status:
-
-```html
-<mat-select
-  name="status"
-  [(ngModel)]="novoStatus">
-```
-
-Substitua por:
-
-```html
-<mat-select
-  name="status"
-  [(ngModel)]="novoStatus"
-  required
-  #status="ngModel">
-```
-
-Agora adicione mensagem de erro logo abaixo do `mat-select`:
-
-```html
-@if (status.invalid && status.touched) {
-  <mat-error>Selecione um status.</mat-error>
-}
-```
-
-O trecho completo ficará:
-
-```html
-<mat-form-field appearance="outline" class="campo-completo">
-  <mat-label>Status</mat-label>
-
-  <mat-select
-    name="status"
-    [(ngModel)]="novoStatus"
-    required
-    #status="ngModel">
-    <mat-option value="pendente">Pendente</mat-option>
-    <mat-option value="em andamento">Em andamento</mat-option>
-    <mat-option value="concluída">Concluída</mat-option>
-  </mat-select>
-
-  @if (status.invalid && status.touched) {
-    <mat-error>Selecione um status.</mat-error>
-  }
-</mat-form-field>
-```
-
----
-
-## 3.5 Validar o campo prioridade
-
-Procure o campo de prioridade:
-
-```html
-<mat-select
-  name="prioridade"
-  [(ngModel)]="novaPrioridade">
-```
-
-Substitua por:
-
-```html
-<mat-select
-  name="prioridade"
-  [(ngModel)]="novaPrioridade"
-  required
-  #prioridade="ngModel">
-```
-
-Adicione:
-
-```html
-@if (prioridade.invalid && prioridade.touched) {
-  <mat-error>Selecione uma prioridade.</mat-error>
-}
-```
-
-O trecho completo ficará:
-
-```html
-<mat-form-field appearance="outline" class="campo-completo">
-  <mat-label>Prioridade</mat-label>
-
-  <mat-select
-    name="prioridade"
-    [(ngModel)]="novaPrioridade"
-    required
-    #prioridade="ngModel">
-    <mat-option value="baixa">Baixa</mat-option>
-    <mat-option value="média">Média</mat-option>
-    <mat-option value="alta">Alta</mat-option>
-  </mat-select>
-
-  @if (prioridade.invalid && prioridade.touched) {
-    <mat-error>Selecione uma prioridade.</mat-error>
-  }
-</mat-form-field>
-```
-
----
-
-## 3.6 Desabilitar o botão quando o formulário estiver inválido
-
-Procure o botão de envio:
-
-```html
-<button mat-raised-button color="primary" type="submit">
-```
-
-Substitua por:
-
-```html
-<button
-  mat-raised-button
-  color="primary"
-  type="submit"
-  [disabled]="formTarefa.invalid">
-```
-
-O trecho completo ficará:
-
-```html
-<button
-  mat-raised-button
-  color="primary"
-  type="submit"
-  [disabled]="formTarefa.invalid">
-  @if (tarefaEmEdicaoId === null) {
-    Cadastrar tarefa
-  } @else {
-    Salvar alteração
-  }
-</button>
-```
-
-## Explicação
-
-Enquanto o formulário estiver inválido, o botão ficará desabilitado.
-
-```html
-[disabled]="formTarefa.invalid"
-```
-
----
-
-# Módulo 4 — Melhorias finais e código completo
-
-## Tempo sugerido
-
-**40 minutos**
-
-Agora vamos organizar o código final da aula.
-
----
-
-# Código final esperado da Aula 3
-
-## 1. `src/app/tarefa-card/tarefa-card.ts`
-
-```ts
-import { Component, input, output } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-
-@Component({
-  selector: 'app-tarefa-card',
-  imports: [MatCardModule, MatButtonModule],
-  templateUrl: './tarefa-card.html',
-  styleUrl: './tarefa-card.css'
-})
-export class TarefaCard {
-  id = input.required<number>();
-  nome = input.required<string>();
-  status = input('pendente');
-  prioridade = input('média');
-
-  editar = output<number>();
-  remover = output<number>();
-
-  aoEditar() {
-    this.editar.emit(this.id());
-  }
-
-  aoRemover() {
-    this.remover.emit(this.id());
-  }
-}
-```
-
----
-
-## 2. `src/app/tarefa-card/tarefa-card.html`
-
-```html
-<mat-card class="card">
-  <mat-card-title>{{ nome() }}</mat-card-title>
-
-  <mat-card-content>
-    <p>Status: {{ status() }}</p>
-    <p>Prioridade: {{ prioridade() }}</p>
-  </mat-card-content>
-
-  <mat-card-actions class="acoes-card">
-    <button mat-button type="button" (click)="aoEditar()">
-      Editar
-    </button>
-
-    <button mat-button type="button" (click)="aoRemover()">
-      Remover
-    </button>
-  </mat-card-actions>
-</mat-card>
-```
-
----
-
-## 3. `src/app/tarefa-card/tarefa-card.css`
-
-```css
-.card {
-  width: 100%;
-}
-
-.acoes-card {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-```
-
----
-
-## 4. `src/app/app.ts`
-
-```ts
-import { Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-
-import { TarefaCard } from './tarefa-card/tarefa-card';
-import { TarefaService } from './tarefa';
-import { Tarefa } from './tarefa.model';
-
-@Component({
-  selector: 'app-root',
-  imports: [
-    FormsModule,
-    MatToolbarModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    TarefaCard
-  ],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
-})
-export class App {
-  private tarefaService = inject(TarefaService);
-
-  title = signal('Lista de Tarefas de Estudo');
-
-  estudante = signal('Ana');
-  curso = signal('Angular básico');
-  turno = signal('Noite');
-
-  imagemAngular = 'https://angular.dev/assets/images/press-kit/angular_icon_gradient.gif';
-
-  tarefas = this.tarefaService.tarefas;
-
-  novoNome = '';
-  novoStatus = 'pendente';
-  novaPrioridade = 'média';
-
-  tarefaEmEdicaoId: number | null = null;
-
-  quantidadeTarefas = computed(() => this.tarefas().length);
-
-  mensagemResumo = computed(() => {
-    return `${this.estudante()} possui ${this.quantidadeTarefas()} tarefa(s) cadastrada(s).`;
-  });
-
-  salvarFormulario() {
-    if (this.tarefaEmEdicaoId === null) {
-      this.cadastrarTarefa();
-    } else {
-      this.salvarEdicao();
-    }
-  }
-
-  cadastrarTarefa() {
-    if (this.novoNome.trim().length < 3) {
-      return;
-    }
-
-    this.tarefaService.cadastrar({
-      nome: this.novoNome,
-      status: this.novoStatus,
-      prioridade: this.novaPrioridade
-    });
-
-    this.limparFormulario();
-  }
-
-  editarTarefaPorId(id: number) {
-    const tarefa = this.tarefaService.buscarPorId(id);
-
-    if (!tarefa) {
-      return;
-    }
-
-    this.editarTarefa(tarefa);
-  }
-
-  editarTarefa(tarefa: Tarefa) {
-    this.tarefaEmEdicaoId = tarefa.id;
-    this.novoNome = tarefa.nome;
-    this.novoStatus = tarefa.status;
-    this.novaPrioridade = tarefa.prioridade;
-  }
-
-  salvarEdicao() {
-    if (this.tarefaEmEdicaoId === null) {
-      return;
-    }
-
-    if (this.novoNome.trim().length < 3) {
-      return;
-    }
-
-    const tarefaAtualizada: Tarefa = {
-      id: this.tarefaEmEdicaoId,
-      nome: this.novoNome,
-      status: this.novoStatus,
-      prioridade: this.novaPrioridade
-    };
-
-    this.tarefaService.atualizar(tarefaAtualizada);
-
-    this.limparFormulario();
-  }
-
-  removerTarefa(id: number) {
-    this.tarefaService.remover(id);
-  }
-
-  limparFormulario() {
-    this.novoNome = '';
-    this.novoStatus = 'pendente';
-    this.novaPrioridade = 'média';
-    this.tarefaEmEdicaoId = null;
-  }
-}
-```
-
----
-
-## 5. `src/app/app.html`
-
-```html
-<mat-toolbar color="primary" class="toolbar">
-  <span>{{ title() }}</span>
-</mat-toolbar>
-
-<main class="container">
-  <mat-card class="header">
-    <mat-card-title>Resumo da aplicação</mat-card-title>
-
-    <mat-card-content>
-      <img [src]="imagemAngular" alt="Logo do Angular" width="80">
-
-      <p>Estudante: {{ estudante() }}</p>
-      <p>Curso: {{ curso() }}</p>
-      <p>Turno: {{ turno() }}</p>
-
-      <p>Quantidade de tarefas: {{ quantidadeTarefas() }}</p>
-
-      <p>{{ mensagemResumo() }}</p>
-    </mat-card-content>
-  </mat-card>
-
-  <mat-card class="formulario">
-    <mat-card-title>
-      @if (tarefaEmEdicaoId === null) {
-        Nova tarefa
-      } @else {
-        Editar tarefa
-      }
-    </mat-card-title>
-
-    <mat-card-content>
-      <form #formTarefa="ngForm" (ngSubmit)="salvarFormulario()">
-        <mat-form-field appearance="outline" class="campo-completo">
-          <mat-label>Nome da tarefa</mat-label>
-
-          <input
-            matInput
-            name="nome"
-            type="text"
-            [(ngModel)]="novoNome"
-            placeholder="Ex.: Estudar Angular Material"
-            required
-            minlength="3"
-            #nome="ngModel">
-
-          @if (nome.invalid && nome.touched) {
-            @if (nome.errors?.['required']) {
-              <mat-error>O nome da tarefa é obrigatório.</mat-error>
-            }
-
-            @if (nome.errors?.['minlength']) {
-              <mat-error>O nome deve ter pelo menos 3 caracteres.</mat-error>
-            }
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="campo-completo">
-          <mat-label>Status</mat-label>
-
-          <mat-select
-            name="status"
-            [(ngModel)]="novoStatus"
-            required
-            #status="ngModel">
-            <mat-option value="pendente">Pendente</mat-option>
-            <mat-option value="em andamento">Em andamento</mat-option>
-            <mat-option value="concluída">Concluída</mat-option>
-          </mat-select>
-
-          @if (status.invalid && status.touched) {
-            <mat-error>Selecione um status.</mat-error>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="campo-completo">
-          <mat-label>Prioridade</mat-label>
-
-          <mat-select
-            name="prioridade"
-            [(ngModel)]="novaPrioridade"
-            required
-            #prioridade="ngModel">
-            <mat-option value="baixa">Baixa</mat-option>
-            <mat-option value="média">Média</mat-option>
-            <mat-option value="alta">Alta</mat-option>
-          </mat-select>
-
-          @if (prioridade.invalid && prioridade.touched) {
-            <mat-error>Selecione uma prioridade.</mat-error>
-          }
-        </mat-form-field>
-
-        <div class="acoes-formulario">
-          <button
-            mat-raised-button
-            color="primary"
-            type="submit"
-            [disabled]="formTarefa.invalid">
-            @if (tarefaEmEdicaoId === null) {
-              Cadastrar tarefa
-            } @else {
-              Salvar alteração
-            }
-          </button>
-
-          @if (tarefaEmEdicaoId !== null) {
-            <button mat-button type="button" (click)="limparFormulario()">
-              Cancelar edição
-            </button>
-          }
-        </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
-
-  <section class="lista">
-    <h2>Tarefas cadastradas</h2>
-
-    @if (tarefas().length > 0) {
-      @for (tarefa of tarefas(); track tarefa.id) {
-        <div class="item-lista">
-          <app-tarefa-card
-            [id]="tarefa.id"
-            [nome]="tarefa.nome"
-            [status]="tarefa.status"
-            [prioridade]="tarefa.prioridade"
-            (editar)="editarTarefaPorId($event)"
-            (remover)="removerTarefa($event)" />
-        </div>
-      }
-    } @else {
-      <p>Nenhuma tarefa cadastrada.</p>
-    }
-  </section>
-</main>
-```
-
----
-
-## 6. `src/app/app.css`
-
-Se o seu arquivo já tem os estilos da Aula 2, apenas ajuste ou confirme que ele está assim:
-
-```css
-.toolbar {
-  display: flex;
-  justify-content: center;
-  min-height: 64px;
-  font-weight: 600;
-  font-size: 20px;
-  letter-spacing: 0.3px;
-  box-shadow: 0 2px 8px rgba(40, 80, 160, 0.18);
-}
-
-.toolbar span {
-  text-align: center;
-}
-
-.container {
-  max-width: 900px;
-  margin: 32px auto;
-  padding: 0 24px 24px;
-}
-
-.header {
-  margin-bottom: 20px;
-}
-
-.formulario {
-  margin-bottom: 24px;
-}
-
-.campo-completo {
-  width: 100%;
-  margin-bottom: 12px;
-}
-
-.acoes-formulario {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.lista {
-  margin-top: 24px;
-}
-
-.item-lista {
-  margin-bottom: 12px;
-}
-```
-
-Como os botões agora estão dentro do `tarefa-card`, não precisamos mais de:
-
-```css
-.botoes-item {
-  display: flex;
-  gap: 8px;
-}
-```
-
----
-
-# 5. Testes práticos em sala
-
-## Teste 1 — Cadastrar tarefa válida
+## Teste 3 — Cadastro
 
 Preencha:
 
 ```text
-Nome: Estudar outputs
+Nome: Criar formulário de tarefas
 Status: Pendente
 Prioridade: Alta
 ```
@@ -1243,41 +1236,41 @@ Prioridade: Alta
 Clique em:
 
 ```text
-Cadastrar tarefa
+Cadastrar
 ```
 
 Resultado esperado:
 
-```text
-A tarefa aparece na lista.
+A nova tarefa aparece imediatamente na lista.
+
+Isso acontece porque a lista está em um `signal` e foi atualizada com:
+
+```ts
+this.tarefas.update(...)
 ```
 
 ---
 
-## Teste 2 — Tentar cadastrar nome vazio
+## Teste 4 — Campo obrigatório
 
-Apague o nome da tarefa.
+Apague o campo nome.
 
 Resultado esperado:
-
-```text
-O botão deve ficar desabilitado.
-```
-
-Ao tocar no campo e sair dele, deve aparecer:
 
 ```text
 O nome da tarefa é obrigatório.
 ```
 
+O botão deve ficar desabilitado.
+
 ---
 
-## Teste 3 — Tentar cadastrar nome com menos de 3 caracteres
+## Teste 5 — Tamanho mínimo
 
 Digite:
 
 ```text
-JS
+AB
 ```
 
 Resultado esperado:
@@ -1288,174 +1281,703 @@ O nome deve ter pelo menos 3 caracteres.
 
 ---
 
-## Teste 4 — Editar tarefa
+## Teste 6 — Edição
 
-Clique em **Editar** dentro do card.
+Clique em **Editar** em uma tarefa.
 
 Resultado esperado:
 
-```text
 Os dados da tarefa aparecem no formulário.
-O título muda para Editar tarefa.
-O botão muda para Salvar alteração.
+
+O título muda de:
+
+```text
+Nova tarefa
+```
+
+para:
+
+```text
+Editar tarefa
+```
+
+O botão muda de:
+
+```text
+Cadastrar
+```
+
+para:
+
+```text
+Salvar alterações
 ```
 
 ---
 
-## Teste 5 — Remover tarefa
+## Teste 7 — Cancelar edição
 
-Clique em **Remover** dentro do card.
+Clique em:
+
+```text
+Cancelar edição
+```
 
 Resultado esperado:
 
-```text
-A tarefa é removida da lista.
-```
+O formulário volta para o modo de cadastro.
 
 ---
 
-# 6. Pontos principais para explicar aos alunos
+## Teste 8 — Remover tarefa
 
-## 6.1 O que mudou na arquitetura?
+Clique em **Remover**.
 
-Antes:
+Resultado esperado:
 
-```text
-App
-├── formulário
-├── lista
-├── botões editar/remover
-└── tarefa-card apenas exibe dados
-```
-
-Agora:
-
-```text
-App
-├── formulário
-├── lista
-└── tarefa-card
-    ├── exibe dados
-    ├── botão editar
-    └── botão remover
-```
-
-O componente pai continua tendo a regra de negócio.
-
-O componente filho apenas emite eventos.
+A tarefa desaparece da lista.
 
 ---
 
-## 6.2 Por que isso melhora a componentização?
+# 14. Problemas comuns e correções
 
-Porque o `tarefa-card` fica responsável pela interface de uma tarefa.
+## Problema 1 — Import antigo do TarefaCard
 
-Ele sabe como exibir uma tarefa e quais ações aparecem visualmente.
-
-Mas ele não decide como editar ou remover.
-
-Essa decisão continua no componente pai.
-
----
-
-## 6.3 Qual a diferença entre `input` e `output`?
+Erro provável:
 
 ```text
-input:
-Recebe dados do componente pai.
-
-output:
-Envia eventos para o componente pai.
+Cannot find module '../../tarefa-card/tarefa-card'
 ```
 
-Na aplicação:
+Causa:
 
-```text
-App envia dados da tarefa para TarefaCard com input.
-TarefaCard avisa App sobre editar/remover com output.
-```
+O componente foi movido para `components`, mas o import antigo ainda está sendo usado.
 
----
-
-## 6.4 O que é `$event`?
-
-É o valor emitido pelo output.
-
-No filho:
+Errado:
 
 ```ts
-this.remover.emit(this.id());
+import { TarefaCard } from '../../tarefa-card/tarefa-card';
 ```
 
-No pai:
+Correto:
+
+```ts
+import { TarefaCard } from '../../components/tarefa-card/tarefa-card';
+```
+
+---
+
+## Problema 2 — Erro com `ngModel`
+
+Erro provável:
+
+```text
+Can't bind to 'ngModel' since it isn't a known property
+```
+
+Causa:
+
+Faltou importar `FormsModule`.
+
+Correção em `tarefas.ts`:
+
+```ts
+import { FormsModule } from '@angular/forms';
+```
+
+E no array `imports`:
+
+```ts
+imports: [
+  FormsModule
+]
+```
+
+---
+
+## Problema 3 — Erro com Angular Material
+
+Erro provável:
+
+```text
+'mat-form-field' is not a known element
+```
+
+Causa:
+
+Faltou importar os módulos do Angular Material.
+
+Correção:
+
+```ts
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+```
+
+E no array `imports`:
+
+```ts
+imports: [
+  MatFormFieldModule,
+  MatInputModule,
+  MatSelectModule
+]
+```
+
+---
+
+## Problema 4 — Esquecer os parênteses do signal
+
+Errado:
 
 ```html
-(remover)="removerTarefa($event)"
+@for (tarefa of tarefas; track tarefa.id) {
 ```
 
-Nesse caso, `$event` é o `id` da tarefa.
-
----
-
-## 6.5 O que é validação com `ngModel`?
-
-É a verificação do estado de um campo do formulário.
-
-Exemplo:
+Correto:
 
 ```html
-#nome="ngModel"
+@for (tarefa of tarefas(); track tarefa.id) {
 ```
 
-Permite acessar:
+Como `tarefas` é um signal, precisa ser lido assim:
 
-```text
-nome.valid
-nome.invalid
-nome.touched
-nome.errors
+```ts
+tarefas()
 ```
 
 ---
 
-# 7. Atividade final da Aula 3
+## Problema 5 — Usar valor fora do tipo
 
-Peça aos alunos para implementar pelo menos **duas melhorias**:
+Errado:
 
-1. Adicionar mensagem de erro quando o nome tiver mais de 50 caracteres.
-2. Adicionar campo “descrição” com validação de tamanho mínimo.
-3. Adicionar confirmação antes de remover tarefa.
-4. Adicionar uma cor ou rótulo visual para prioridade alta.
-5. Adicionar um output chamado `concluir`, para marcar tarefa como concluída.
-6. Criar uma mensagem quando o formulário estiver em modo edição.
-7. Impedir que duas tarefas com o mesmo nome sejam cadastradas.
+```ts
+status: 'Concluída'
+```
+
+Correto:
+
+```ts
+status: 'concluida'
+```
+
+No HTML, podemos exibir um texto mais amigável:
+
+```html
+<mat-option value="concluida">Concluída</mat-option>
+```
+
+Ou seja:
+
+```text
+Valor interno: concluida
+Texto exibido: Concluída
+```
 
 ---
 
-# 8. Fechamento da aula
+## Problema 6 — Chamar `inject()` dentro de método
 
-Ao final, retome:
+Evite fazer isso:
 
-```text
-input envia dados do pai para o filho.
-output envia eventos do filho para o pai.
-$event carrega o valor emitido.
-ngModel pode ser usado para validar campos.
-required torna o campo obrigatório.
-minlength define tamanho mínimo.
-formTarefa.invalid permite bloquear o envio.
+```ts
+salvarFormulario(): void {
+  const tarefaService = inject(TarefaService);
+}
 ```
 
-Resultado final da Aula 3:
+A forma correta nesta aula é:
 
-```text
-CRUD de tarefas com componente filho mais organizado e formulário validado.
+```ts
+private readonly tarefaService = inject(TarefaService);
 ```
 
-A aplicação agora está melhor preparada para a próxima etapa do curso: **roteamento, páginas e menu lateral com Angular Material**.
+O `inject()` deve ser usado em um contexto de injeção válido, como inicializador de campo da classe do componente. ([Angular][3])
 
-[1]: https://v18.angular.dev/essentials/components/?utm_source=chatgpt.com "Composing with Components"
-[2]: https://angular.dev/guide/components/inputs?utm_source=chatgpt.com "Accepting data with input properties"
-[3]: https://angular.dev/api/core/output?utm_source=chatgpt.com "output"
-[4]: https://angular.dev/guide/forms?utm_source=chatgpt.com "Forms • Overview"
-[5]: https://angular.dev/api/forms/RequiredValidator?utm_source=chatgpt.com "RequiredValidator"
+---
+
+# 15. Atividade prática em sala
+
+Depois da implementação guiada, proponha as seguintes melhorias.
+
+---
+
+## Atividade 1 — Confirmar antes de remover
+
+
+# 1. Criar o componente de diálogo
+
+No terminal:
+
+```bash
+ng generate component components/confirmacao-dialog --skip-tests
+```
+
+Ou:
+
+```bash
+ng g c components/confirmacao-dialog --skip-tests
+```
+
+Será criado:
+
+```text
+src/app/components/confirmacao-dialog/
+├── confirmacao-dialog.ts
+├── confirmacao-dialog.html
+└── confirmacao-dialog.css
+```
+
+---
+
+# 2. Código do diálogo
+
+Abra:
+
+```text
+src/app/components/confirmacao-dialog/confirmacao-dialog.ts
+```
+
+Coloque:
+
+```ts
+import { Component } from '@angular/core';
+
+import { MatButtonModule } from '@angular/material/button';
+import {
+  MatDialogActions,
+  MatDialogClose,
+  MatDialogContent,
+  MatDialogTitle
+} from '@angular/material/dialog';
+
+@Component({
+  selector: 'app-confirmacao-dialog',
+  imports: [
+    MatButtonModule,
+    MatDialogTitle,
+    MatDialogContent,
+    MatDialogActions,
+    MatDialogClose
+  ],
+  templateUrl: './confirmacao-dialog.html',
+  styleUrl: './confirmacao-dialog.css'
+})
+export class ConfirmacaoDialog {}
+```
+
+---
+
+# 3. HTML do diálogo
+
+Abra:
+
+```text
+src/app/components/confirmacao-dialog/confirmacao-dialog.html
+```
+
+Coloque:
+
+```html
+<h2 mat-dialog-title>Confirmar remoção</h2>
+
+<mat-dialog-content>
+  <p>Deseja realmente remover esta tarefa?</p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button
+    mat-button
+    type="button"
+    mat-dialog-close="false"
+  >
+    Cancelar
+  </button>
+
+  <button
+    mat-raised-button
+    color="warn"
+    type="button"
+    mat-dialog-close="true"
+  >
+    Remover
+  </button>
+</mat-dialog-actions>
+```
+
+Aqui, o botão **Cancelar** fecha o diálogo retornando `false`.
+
+O botão **Remover** fecha o diálogo retornando `true`.
+
+---
+
+# 4. Atualizar a página `tarefas.ts`
+
+Agora, na página de tarefas, importe o `MatDialog` e o componente de diálogo.
+
+Abra:
+
+```text
+src/app/pages/tarefas/tarefas.ts
+```
+
+Adicione os imports:
+
+```ts
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+
+import { ConfirmacaoDialog } from '../../components/confirmacao-dialog/confirmacao-dialog';
+```
+
+No array `imports`, adicione:
+
+```ts
+MatDialogModule
+```
+
+Depois, injete o diálogo com `inject()`:
+
+```ts
+private readonly dialog = inject(MatDialog);
+```
+
+O trecho principal ficará assim:
+
+```ts
+import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+
+import {
+  PrioridadeTarefa,
+  StatusTarefa
+} from '../../models/tarefa.model';
+
+import { TarefaService } from '../../services/tarefa';
+import { TarefaCard } from '../../components/tarefa-card/tarefa-card';
+import { ConfirmacaoDialog } from '../../components/confirmacao-dialog/confirmacao-dialog';
+
+@Component({
+  selector: 'app-tarefas',
+  imports: [
+    FormsModule,
+    MatButtonModule,
+    MatCardModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    TarefaCard
+  ],
+  templateUrl: './tarefas.html',
+  styleUrl: './tarefas.css'
+})
+export class Tarefas {
+  private readonly tarefaService = inject(TarefaService);
+  private readonly dialog = inject(MatDialog);
+
+  tarefas = this.tarefaService.listar();
+
+  novoNome = '';
+  novoStatus: StatusTarefa = 'pendente';
+  novaPrioridade: PrioridadeTarefa = 'media';
+
+  idEmEdicao: number | null = null;
+
+  salvarFormulario(): void {
+    const dadosFormulario = {
+      nome: this.novoNome,
+      status: this.novoStatus,
+      prioridade: this.novaPrioridade
+    };
+
+    if (this.idEmEdicao === null) {
+      this.tarefaService.cadastrar(dadosFormulario);
+    } else {
+      this.tarefaService.editar(this.idEmEdicao, dadosFormulario);
+    }
+
+    this.limparFormulario();
+  }
+
+  editarTarefaPorId(id: number): void {
+    const tarefa = this.tarefaService.buscarPorId(id);
+
+    if (tarefa) {
+      this.idEmEdicao = tarefa.id;
+      this.novoNome = tarefa.nome;
+      this.novoStatus = tarefa.status;
+      this.novaPrioridade = tarefa.prioridade;
+    }
+  }
+
+  /*novo*/
+  removerTarefa(id: number): void {
+    const dialogRef = this.dialog.open(ConfirmacaoDialog);
+
+    dialogRef.afterClosed().subscribe((confirmou: string | undefined) => {
+      if (confirmou === 'true') {
+        this.tarefaService.remover(id);
+
+        if (this.idEmEdicao === id) {
+          this.limparFormulario();
+        }
+      }
+    });
+  }
+
+  cancelarEdicao(): void {
+    this.limparFormulario();
+  }
+
+  private limparFormulario(): void {
+    this.idEmEdicao = null;
+    this.novoNome = '';
+    this.novoStatus = 'pendente';
+    this.novaPrioridade = 'media';
+  }
+}
+```
+
+---
+
+# 5. Observação importante sobre `mat-dialog-close`
+
+No exemplo acima, usamos:
+
+```html
+mat-dialog-close="true"
+```
+
+e:
+
+```html
+mat-dialog-close="false"
+```
+
+Isso retorna strings: `'true'` ou `'false'`.
+
+Por isso, no TypeScript, verificamos:
+
+```ts
+if (confirmou === 'true') {
+  // remove
+}
+```
+
+---
+
+# 6. Forma melhor: retornar booleano verdadeiro
+
+Uma versão mais adequada é usar property binding:
+
+```html
+[mat-dialog-close]="true"
+```
+
+e:
+
+```html
+[mat-dialog-close]="false"
+```
+
+Então o HTML do diálogo ficaria assim:
+
+```html
+<h2 mat-dialog-title>Confirmar remoção</h2>
+
+<mat-dialog-content>
+  <p>Deseja realmente remover esta tarefa?</p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button
+    mat-button
+    type="button"
+    [mat-dialog-close]="false"
+  >
+    Cancelar
+  </button>
+
+  <button
+    mat-raised-button
+    color="warn"
+    type="button"
+    [mat-dialog-close]="true"
+  >
+    Remover
+  </button>
+</mat-dialog-actions>
+```
+
+E o método `removerTarefa` fica mais limpo:
+
+```ts
+removerTarefa(id: number): void {
+  const dialogRef = this.dialog.open(ConfirmacaoDialog);
+
+  dialogRef.afterClosed().subscribe((confirmou: boolean) => {
+    if (confirmou) {
+      this.tarefaService.remover(id);
+
+      if (this.idEmEdicao === id) {
+        this.limparFormulario();
+      }
+    }
+  });
+}
+```
+
+---
+
+# 7. Trecho final recomendado para o tutorial
+
+Substitua a atividade com `confirm()` por esta versão:
+
+```ts
+removerTarefa(id: number): void {
+  const dialogRef = this.dialog.open(ConfirmacaoDialog);
+
+  dialogRef.afterClosed().subscribe((confirmou: boolean) => {
+    if (confirmou) {
+      this.tarefaService.remover(id);
+
+      if (this.idEmEdicao === id) {
+        this.limparFormulario();
+      }
+    }
+  });
+}
+```
+
+E no diálogo use:
+
+```html
+<button
+  mat-button
+  type="button"
+  [mat-dialog-close]="false"
+>
+  Cancelar
+</button>
+
+<button
+  mat-raised-button
+  color="warn"
+  type="button"
+  [mat-dialog-close]="true"
+>
+  Remover
+</button>
+```
+
+Assim a Aula 3 fica mais alinhada ao Angular Material e evita o `confirm()` nativo do navegador.
+---
+
+## Atividade 2 — Melhorar a mensagem de lista vazia
+
+Alterar:
+
+```html
+<p>Nenhuma tarefa cadastrada.</p>
+```
+
+Para:
+
+```html
+<p>
+  Nenhuma tarefa cadastrada. Use o formulário acima para adicionar sua primeira tarefa.
+</p>
+```
+
+---
+
+
+# 16. Desafio para casa
+
+Adicionar o campo:
+
+```ts
+dataEntrega: string;
+```
+
+O aluno deverá atualizar:
+
+```text
+src/app/models/tarefa.model.ts
+src/app/services/tarefa.ts
+src/app/pages/tarefas/tarefas.ts
+src/app/pages/tarefas/tarefas.html
+src/app/components/tarefa-card/tarefa-card.ts
+src/app/components/tarefa-card/tarefa-card.html
+```
+
+Também deverá validar se a data foi preenchida.
+
+---
+
+# 17. Fechamento da aula
+
+Finalize com esta síntese:
+
+> Na Aula 1, criamos uma aplicação simples com lista de tarefas, signals e componente filho. Na Aula 2, reorganizamos a aplicação em páginas, rotas, layout, modelos e pastas. Na Aula 3, movemos o `TarefaCard` para `components` e transformamos a página `/tarefas` em um CRUD local com service, signal, formulário, validação e comunicação por output.
+
+---
+
+# 18. Resumo dos conceitos trabalhados
+
+| Conceito       | Uso na Aula 3                               |
+| -------------- | ------------------------------------------- |
+| Refatoração    | Mover `TarefaCard` para `components`        |
+| `signal`       | Guardar a lista de tarefas no service       |
+| `asReadonly()` | Expor a lista sem permitir alteração direta |
+| `update()`     | Cadastrar, editar e remover tarefas         |
+| `inject()`     | Injetar o `TarefaService` sem construtor    |
+| `FormsModule`  | Habilitar formulários template-driven       |
+| `ngModel`      | Ligar campos do formulário ao TypeScript    |
+| `ngForm`       | Verificar validade do formulário            |
+| `ngSubmit`     | Enviar o formulário                         |
+| `mat-error`    | Exibir mensagens de validação               |
+| `input()`      | Enviar dados da página para o card          |
+| `output()`     | Enviar eventos do card para a página        |
+| `$event`       | Receber o id emitido pelo componente filho  |
+| `@for`         | Listar tarefas                              |
+| `@if`          | Exibir condições no template                |
+
+---
+
+# 19. Fluxo final da Aula 3
+
+```text
+1. Revisar Aula 1 e Aula 2.
+2. Mover src/app/tarefa-card para src/app/components/tarefa-card.
+3. Remover imports antigos do App.
+4. Conferir o modelo Tarefa.
+5. Criar TarefaService.
+6. Colocar a lista de tarefas como signal no service.
+7. Expor a lista com asReadonly().
+8. Criar métodos listar, buscarPorId, cadastrar, editar e remover.
+9. Atualizar a página /tarefas para usar inject().
+10. Criar formulário com ngForm, ngModel e ngSubmit.
+11. Adicionar validação com required, minlength e mat-error.
+12. Atualizar TarefaCard com inputs e outputs.
+13. Adicionar botões Editar e Remover ao card.
+14. Integrar eventos do card com métodos da página.
+15. Testar cadastro, edição, cancelamento e remoção.
+```
+
+Essa é a versão consolidada e coerente com o que foi construído nas Aulas 1 e 2.
+
+[1]: https://angular.dev/guide/signals?utm_source=chatgpt.com "Signals • Overview"
+[2]: https://angular.dev/api/core/WritableSignal?utm_source=chatgpt.com "WritableSignal"
+[3]: https://angular.dev/api/core/inject?utm_source=chatgpt.com "inject"
+[4]: https://angular.dev/guide/forms/template-driven-forms?utm_source=chatgpt.com "Template-driven forms"
+[5]: https://angular.dev/guide/components/outputs?utm_source=chatgpt.com "Custom events with outputs"
