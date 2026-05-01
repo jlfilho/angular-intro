@@ -23,6 +23,7 @@ export class TarefaCard {
   nome = input.required<string>();
   status = input.required<StatusTarefa>();
   prioridade = input.required<PrioridadeTarefa>();
+  estudanteNome = input.required<string>();
 
   editar = output<number>();
   remover = output<number>();

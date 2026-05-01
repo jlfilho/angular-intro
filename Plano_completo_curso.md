@@ -752,6 +752,8 @@ Tarefas por prioridade
 Tarefas por estudante
 ```
 
+Usar `mat-table` para relatório
+
 Exemplo conceitual:
 
 ```html

@@ -9,12 +9,14 @@ export class TarefaService {
   private readonly tarefas = signal<Tarefa[]>([
     {
       id: 1,
+      estudanteId: 1, // 🔥 NOVO
       nome: 'Reestruturar aplicação Angular',
       status: 'pendente',
       prioridade: 'alta'
     },
     {
       id: 2,
+      estudanteId: 1, // 🔥 NOVO
       nome: 'Criar menu lateral',
       status: 'em andamento',
       prioridade: 'media'
@@ -22,6 +24,17 @@ export class TarefaService {
   ]);
 
   private proximoId = 3;
+
+  cadastrar(tarefa: Omit<Tarefa, 'id'>): void {
+    const novaTarefa: Tarefa = {
+      id: this.proximoId,
+      ...tarefa
+    };
+
+    this.tarefas.update(lista => [...lista, novaTarefa]);
+
+    this.proximoId++;
+  }
 
   listar(): Signal<Tarefa[]> {
     return this.tarefas.asReadonly();
@@ -31,21 +44,7 @@ export class TarefaService {
     return this.tarefas().find(tarefa => tarefa.id === id);
   }
 
-  cadastrar(tarefa: Omit<Tarefa, 'id'>): void {
-    const novaTarefa: Tarefa = {
-      id: this.proximoId,
-      nome: tarefa.nome,
-      status: tarefa.status,
-      prioridade: tarefa.prioridade
-    };
-
-    this.tarefas.update(listaAtual => [
-      ...listaAtual,
-      novaTarefa
-    ]);
-
-    this.proximoId++;
-  }
+  dataEntrega?: string;
 
   editar(id: number, tarefaAtualizada: Omit<Tarefa, 'id'>): void {
     this.tarefas.update(listaAtual =>
@@ -53,6 +52,7 @@ export class TarefaService {
         tarefa.id === id
           ? {
             id,
+            estudanteId: tarefaAtualizada.estudanteId, // 🔥 NOVO
             nome: tarefaAtualizada.nome,
             status: tarefaAtualizada.status,
             prioridade: tarefaAtualizada.prioridade

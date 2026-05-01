@@ -59,6 +59,27 @@
         }
       </mat-form-field>
 
+      <mat-form-field appearance="outline" class="campo">
+        <mat-label>Estudante responsável</mat-label>
+
+        <mat-select
+          name="estudanteId"
+          [(ngModel)]="novoEstudanteId"
+          required
+          #estudanteId="ngModel"
+        >
+          @for (estudante of estudantes(); track estudante.id) {
+            <mat-option [value]="estudante.id">
+              {{ estudante.nome }}
+            </mat-option>
+          }
+        </mat-select>
+
+        @if (estudanteId.invalid && estudanteId.touched) {
+          <mat-error>Selecione um estudante.</mat-error>
+        }
+      </mat-form-field>
+
       <div class="acoes-formulario">
         <button mat-raised-button color="primary" type="submit" [disabled]="formTarefa.invalid">
           @if (idEmEdicao === null) {
@@ -78,21 +99,98 @@
   </mat-card-content>
 </mat-card>
 
+<section class="indicadores">
+  <mat-card>
+    <strong>Total</strong>
+    <span>{{ totalTarefas() }}</span>
+  </mat-card>
+
+  <mat-card>
+    <strong>Pendentes</strong>
+    <span>{{ totalPendentes() }}</span>
+  </mat-card>
+
+  <mat-card>
+    <strong>Concluídas</strong>
+    <span>{{ totalConcluidas() }}</span>
+  </mat-card>
+
+  <mat-card>
+    <strong>Alta prioridade</strong>
+    <span>{{ totalAlta() }}</span>
+  </mat-card>
+</section>
+
+<section class="filtros-tarefas">
+  <!-- filtro por estudante -->
+  <div class="filtro-estudante">
+    <mat-form-field appearance="outline">
+      <mat-label>Filtrar por estudante</mat-label>
+
+      <mat-select
+        [value]="estudanteSelecionadoId()"
+        (selectionChange)="estudanteSelecionadoId.set($event.value)"
+      >
+        <mat-option [value]="null">Todos</mat-option>
+
+        @for (estudante of estudantes(); track estudante.id) {
+          <mat-option [value]="estudante.id">
+            {{ estudante.nome }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <button mat-raised-button color="primary" type="button" (click)="filtroSelecionado.set('todas')">
+    Todas
+  </button>
+
+  <button mat-raised-button type="button" (click)="filtroSelecionado.set('pendente')">
+    Pendentes
+  </button>
+
+  <button mat-raised-button type="button" (click)="filtroSelecionado.set('concluida')">
+    Concluídas
+  </button>
+
+  <button mat-raised-button type="button" (click)="filtroSelecionado.set('alta')">
+    Alta prioridade
+  </button>
+</section>
+
 <section class="lista-tarefas">
   <h2>Tarefas cadastradas</h2>
 
   @if (tarefas().length === 0) {
     <p>Nenhuma tarefa cadastrada. Use o formulário acima para adicionar sua primeira tarefa.</p>
   } @else {
-    @for (tarefa of tarefas(); track tarefa.id) {
+    @for (tarefa of tarefasFiltradas(); track tarefa.id) {
       <app-tarefa-card
         [id]="tarefa.id"
         [nome]="tarefa.nome"
         [status]="tarefa.status"
         [prioridade]="tarefa.prioridade"
+        [estudanteNome]="buscarNomeEstudante(tarefa.estudanteId)"
         (editar)="editarTarefaPorId($event)"
         (remover)="removerTarefa($event)"
       />
     }
+  }
+</section>
+
+<section class="relatorio-tarefas">
+  <h2>Relatório por estudante</h2>
+
+  @if (estudantes().length === 0) {
+    <p>Nenhum estudante cadastrado para gerar relatório.</p>
+  } @else {
+    <mat-card class="relatorio-card">
+      @for (item of tarefasPorEstudante() | keyvalue; track item.key) {
+        <div class="linha-relatorio">
+          <span>{{ item.key }}</span>
+          <strong>{{ item.value }} tarefa(s)</strong>
+        </div>
+      }
+    </mat-card>
   }
 </section>

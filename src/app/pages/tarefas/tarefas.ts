@@ -1,5 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { KeyValuePipe } from '@angular/common';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -8,13 +9,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
-import {
-  PrioridadeTarefa,
-  StatusTarefa
-} from '../../models/tarefa.model';
+import { EstudanteService } from '../../services/estudante.service';
+
+import { PrioridadeTarefa, StatusTarefa } from '../../models/tarefa.model';
 import { TarefaCard } from '../../components/tarefa-card/tarefa-card';
 import { TarefaService } from '../../services/tarefa.service';
 import { ConfirmacaoDialog } from '../../components/confirmacao-dialog/confirmacao-dialog';
+
 
 @Component({
   selector: 'app-tarefas',
@@ -26,7 +27,8 @@ import { ConfirmacaoDialog } from '../../components/confirmacao-dialog/confirmac
     MatInputModule,
     MatSelectModule,
     MatDialogModule,
-    TarefaCard
+    TarefaCard,
+    KeyValuePipe
   ],
   templateUrl: './tarefas.html',
   styleUrl: './tarefas.css',
@@ -34,20 +36,78 @@ import { ConfirmacaoDialog } from '../../components/confirmacao-dialog/confirmac
 export class Tarefas {
   private readonly tarefaService = inject(TarefaService);
   private readonly dialog = inject(MatDialog);
+  private readonly estudanteService = inject(EstudanteService);
 
+  novoEstudanteId: number | null = null;
   tarefas = this.tarefaService.listar();
+  estudantes = this.estudanteService.listar();
 
   novoNome = '';
   novoStatus: StatusTarefa = 'pendente';
   novaPrioridade: PrioridadeTarefa = 'media';
 
   idEmEdicao: number | null = null;
+  filtroSelecionado = signal<'todas' | 'pendente' | 'concluida' | 'alta'>('todas');
+  estudanteSelecionadoId = signal<number | null>(null);
+
+  totalTarefas = computed(() => this.tarefas().length);
+
+  totalPendentes = computed(() =>
+    this.tarefas().filter(t => t.status === 'pendente').length
+  );
+
+  totalConcluidas = computed(() =>
+    this.tarefas().filter(t => t.status === 'concluida').length
+  );
+
+  totalAlta = computed(() =>
+    this.tarefas().filter(t => t.prioridade === 'alta').length
+  );
+
+  tarefasPorEstudante = computed(() => {
+    const mapa: Record<string, number> = {};
+
+    this.estudantes().forEach(estudante => {
+      mapa[estudante.nome] = this.tarefas().filter(
+        tarefa => tarefa.estudanteId === estudante.id
+      ).length;
+    });
+
+    return mapa;
+  });
+
+  tarefasFiltradas = computed(() => {
+    let lista = this.tarefas();
+
+    // filtro por estudante
+    if (this.estudanteSelecionadoId() !== null) {
+      lista = lista.filter(
+        tarefa => tarefa.estudanteId === this.estudanteSelecionadoId()
+      );
+    }
+
+    // filtro geral
+    switch (this.filtroSelecionado()) {
+      case 'pendente':
+        return lista.filter(t => t.status === 'pendente');
+
+      case 'concluida':
+        return lista.filter(t => t.status === 'concluida');
+
+      case 'alta':
+        return lista.filter(t => t.prioridade === 'alta');
+
+      default:
+        return lista;
+    }
+  });
 
   salvarFormulario(): void {
     const dadosFormulario = {
       nome: this.novoNome,
       status: this.novoStatus,
-      prioridade: this.novaPrioridade
+      prioridade: this.novaPrioridade,
+      estudanteId: this.novoEstudanteId!
     };
 
     if (this.idEmEdicao === null) {
@@ -57,6 +117,11 @@ export class Tarefas {
     }
 
     this.limparFormulario();
+  }
+
+  buscarNomeEstudante(id: number): string {
+    const estudante = this.estudanteService.buscarPorId(id);
+    return estudante ? estudante.nome : 'Não encontrado';
   }
 
   editarTarefaPorId(id: number): void {

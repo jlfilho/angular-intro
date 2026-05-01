@@ -23,3 +23,64 @@
 .lista-tarefas h2 {
   margin-bottom: 16px;
 }
+
+.filtros-tarefas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin: 24px 0;
+}
+
+.botoes-filtro {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filtro-estudante {
+  min-width: 250px;
+}
+
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.indicadores mat-card {
+  padding: 16px;
+  background-color: #f8f9ff;
+}
+
+.indicadores strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.indicadores span {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.relatorio-tarefas {
+  margin-top: 32px;
+}
+
+.relatorio-card {
+  padding: 16px;
+  background-color: #f8f9ff;
+}
+
+.linha-relatorio {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid #d6d9e6;
+}
+
+.linha-relatorio:last-child {
+  border-bottom: none;
+}
