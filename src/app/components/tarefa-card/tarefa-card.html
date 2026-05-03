@@ -1,39 +1,62 @@
 <mat-card class="tarefa-card">
   <mat-card-header>
-    <mat-card-title>{{ nome() }}</mat-card-title>
+    <img
+      src="/avatar-estudante.png"
+      alt="Avatar do estudante {{ estudanteNome() }}"
+      width="56"
+      height="56"
+      class="avatar-estudante"
+    />
+
+    <div>
+      <mat-card-title>{{ nome() | titlecase }}</mat-card-title>
+
+      <mat-card-subtitle>
+        {{ estudanteNome() | titlecase }}
+      </mat-card-subtitle>
+    </div>
   </mat-card-header>
 
   <mat-card-content>
     <p>
       <strong>Status:</strong>
-      @if (status() === 'concluida') {
-        Tarefa concluída
-      } @else if (status() === 'em andamento') {
-        Em andamento
-      } @else {
-        Pendente
-      }
+      {{ status() | statusTarefaLabel }}
     </p>
 
     <p>
       <strong>Prioridade:</strong>
-      @if (prioridade() === 'alta') {
-        Alta
-      } @else if (prioridade() === 'media') {
-        Média
-      } @else {
-        Baixa
-      }
+      {{ prioridade() | prioridadeLabel }}
     </p>
+
     <p>
-      <strong>Estudante:</strong>
-      {{ estudanteNome() }}
+      <strong>Data de entrega:</strong>
+      {{ dataEntrega() | date:'dd/MM/yyyy' }}
     </p>
+
+    <details class="debug-card">
+      <summary>Ver dados técnicos da tarefa</summary>
+
+      <pre>{{ dadosDebug() | json }}</pre>
+    </details>
   </mat-card-content>
 
   <mat-card-actions>
-    <button mat-button color="primary" type="button" (click)="aoClicarEditar()">Editar</button>
+    <button
+      mat-button
+      color="primary"
+      type="button"
+      (click)="aoClicarEditar()"
+    >
+      Editar
+    </button>
 
-    <button mat-button color="warn" type="button" (click)="aoClicarRemover()">Remover</button>
+    <button
+      mat-button
+      color="warn"
+      type="button"
+      (click)="aoClicarRemover()"
+    >
+      Remover
+    </button>
   </mat-card-actions>
 </mat-card>

@@ -60,6 +60,24 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="campo">
+        <mat-label>Data de entrega</mat-label>
+        <input
+          matInput
+          [matDatepicker]="pickerDataEntrega"
+          name="dataEntrega"
+          [(ngModel)]="novaDataEntrega"
+          required
+          #dataEntrega="ngModel"
+        />
+        <mat-hint>DD/MM/AAAA</mat-hint>
+        <mat-datepicker-toggle matIconSuffix [for]="pickerDataEntrega"> </mat-datepicker-toggle>
+        <mat-datepicker #pickerDataEntrega></mat-datepicker>
+        @if (dataEntrega.invalid && dataEntrega.touched) {
+          <mat-error>A data de entrega é obrigatória.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="campo">
         <mat-label>Estudante responsável</mat-label>
 
         <mat-select
@@ -170,6 +188,8 @@
         [nome]="tarefa.nome"
         [status]="tarefa.status"
         [prioridade]="tarefa.prioridade"
+        [dataEntrega]="tarefa.dataEntrega"
+        [dadosDebug]="tarefa"
         [estudanteNome]="buscarNomeEstudante(tarefa.estudanteId)"
         (editar)="editarTarefaPorId($event)"
         (remover)="removerTarefa($event)"

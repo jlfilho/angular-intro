@@ -9,21 +9,31 @@ export class TarefaService {
   private readonly tarefas = signal<Tarefa[]>([
     {
       id: 1,
-      estudanteId: 1, // 🔥 NOVO
+      estudanteId: 1,
       nome: 'Reestruturar aplicação Angular',
       status: 'pendente',
-      prioridade: 'alta'
+      prioridade: 'alta',
+      dataEntrega: new Date(2026, 4, 20) // 🔥 NOVO
     },
     {
       id: 2,
-      estudanteId: 1, // 🔥 NOVO
+      estudanteId: 1,
       nome: 'Criar menu lateral',
       status: 'em andamento',
-      prioridade: 'media'
+      prioridade: 'media',
+      dataEntrega: new Date(2026, 4, 25) // 🔥 NOVO
     }
   ]);
 
   private proximoId = 3;
+
+  listar(): Signal<Tarefa[]> {
+    return this.tarefas.asReadonly();
+  }
+
+  buscarPorId(id: number): Tarefa | undefined {
+    return this.tarefas().find(tarefa => tarefa.id === id);
+  }
 
   cadastrar(tarefa: Omit<Tarefa, 'id'>): void {
     const novaTarefa: Tarefa = {
@@ -36,27 +46,15 @@ export class TarefaService {
     this.proximoId++;
   }
 
-  listar(): Signal<Tarefa[]> {
-    return this.tarefas.asReadonly();
-  }
-
-  buscarPorId(id: number): Tarefa | undefined {
-    return this.tarefas().find(tarefa => tarefa.id === id);
-  }
-
-  dataEntrega?: string;
 
   editar(id: number, tarefaAtualizada: Omit<Tarefa, 'id'>): void {
     this.tarefas.update(listaAtual =>
       listaAtual.map(tarefa =>
         tarefa.id === id
           ? {
-            id,
-            estudanteId: tarefaAtualizada.estudanteId, // 🔥 NOVO
-            nome: tarefaAtualizada.nome,
-            status: tarefaAtualizada.status,
-            prioridade: tarefaAtualizada.prioridade
-          }
+              id,
+              ...tarefaAtualizada
+            }
           : tarefa
       )
     );

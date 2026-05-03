@@ -1,8 +1,6 @@
 <h1>Estudantes</h1>
 
-<p>
-  Cadastre, edite e remova estudantes do Gerenciador de Estudos.
-</p>
+<p>Cadastre, edite e remova estudantes do Gerenciador de Estudos.</p>
 
 <mat-card class="formulario-card">
   <mat-card-header>
@@ -20,12 +18,7 @@
       <mat-form-field appearance="outline" class="campo">
         <mat-label>Nome</mat-label>
 
-        <input
-          matInput
-          type="text"
-          formControlName="nome"
-          placeholder="Ex.: Ana Silva"
-        />
+        <input matInput type="text" formControlName="nome" placeholder="Ex.: Ana Silva" />
 
         @if (campoInvalido('nome')) {
           @if (formEstudante.controls.nome.errors?.['required']) {
@@ -62,12 +55,7 @@
       <mat-form-field appearance="outline" class="campo">
         <mat-label>Curso</mat-label>
 
-        <input
-          matInput
-          type="text"
-          formControlName="curso"
-          placeholder="Ex.: Angular Básico"
-        />
+        <input matInput type="text" formControlName="curso" placeholder="Ex.: Angular Básico" />
 
         @if (campoInvalido('curso')) {
           @if (formEstudante.controls.curso.errors?.['required']) {
@@ -97,11 +85,7 @@
       <mat-form-field appearance="outline" class="campo">
         <mat-label>Data de ingresso</mat-label>
 
-        <input
-          matInput
-          type="date"
-          formControlName="dataIngresso"
-        />
+        <input matInput type="date" formControlName="dataIngresso" />
 
         @if (campoInvalido('dataIngresso')) {
           <mat-error>A data de ingresso é obrigatória.</mat-error>
@@ -109,11 +93,7 @@
       </mat-form-field>
 
       <div class="acoes-formulario">
-        <button
-          mat-raised-button
-          color="primary"
-          type="submit"
-        >
+        <button mat-raised-button color="primary" type="submit">
           @if (idEmEdicao === null) {
             Cadastrar
           } @else {
@@ -122,12 +102,7 @@
         </button>
 
         @if (idEmEdicao !== null) {
-          <button
-            mat-button
-            color="warn"
-            type="button"
-            (click)="cancelarEdicao()"
-          >
+          <button mat-button color="warn" type="button" (click)="cancelarEdicao()">
             Cancelar edição
           </button>
         }
@@ -140,9 +115,7 @@
   <h2>Estudantes cadastrados</h2>
 
   @if (estudantes().length === 0) {
-    <p>
-      Nenhum estudante cadastrado. Use o formulário acima para adicionar o primeiro estudante.
-    </p>
+    <p>Nenhum estudante cadastrado. Use o formulário acima para adicionar o primeiro estudante.</p>
   } @else {
     <div class="grid-estudantes">
       @for (estudante of estudantes(); track estudante.id) {
@@ -160,13 +133,7 @@
 
             <p>
               <strong>Turno:</strong>
-              @if (estudante.turno === 'matutino') {
-                Matutino
-              } @else if (estudante.turno === 'vespertino') {
-                Vespertino
-              } @else {
-                Noturno
-              }
+              {{ estudante.turno | turnoLabel }}
             </p>
 
             <p>
@@ -185,12 +152,7 @@
               Editar
             </button>
 
-            <button
-              mat-button
-              color="warn"
-              type="button"
-              (click)="removerEstudante(estudante.id)"
-            >
+            <button mat-button color="warn" type="button" (click)="removerEstudante(estudante.id)">
               Remover
             </button>
           </mat-card-actions>

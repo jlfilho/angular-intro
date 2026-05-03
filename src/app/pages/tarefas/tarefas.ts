@@ -1,13 +1,14 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { KeyValuePipe } from '@angular/common'; // 🔥 NOVO
 import { FormsModule } from '@angular/forms';
-import { KeyValuePipe } from '@angular/common';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { EstudanteService } from '../../services/estudante.service';
 
@@ -21,14 +22,15 @@ import { ConfirmacaoDialog } from '../../components/confirmacao-dialog/confirmac
   selector: 'app-tarefas',
   imports: [
     FormsModule,
+    KeyValuePipe,
     MatButtonModule,
     MatCardModule,
+    MatDatepickerModule,
+    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatDialogModule,
-    TarefaCard,
-    KeyValuePipe
+    TarefaCard
   ],
   templateUrl: './tarefas.html',
   styleUrl: './tarefas.css',
@@ -45,6 +47,7 @@ export class Tarefas {
   novoNome = '';
   novoStatus: StatusTarefa = 'pendente';
   novaPrioridade: PrioridadeTarefa = 'media';
+  novaDataEntrega: Date | null = null;
 
   idEmEdicao: number | null = null;
   filtroSelecionado = signal<'todas' | 'pendente' | 'concluida' | 'alta'>('todas');
@@ -103,11 +106,16 @@ export class Tarefas {
   });
 
   salvarFormulario(): void {
+    if (this.novoEstudanteId === null || this.novaDataEntrega === null) {
+      return;
+    }
+
     const dadosFormulario = {
       nome: this.novoNome,
       status: this.novoStatus,
       prioridade: this.novaPrioridade,
-      estudanteId: this.novoEstudanteId!
+      estudanteId: this.novoEstudanteId,
+      dataEntrega: this.novaDataEntrega
     };
 
     if (this.idEmEdicao === null) {
@@ -132,6 +140,8 @@ export class Tarefas {
       this.novoNome = tarefa.nome;
       this.novoStatus = tarefa.status;
       this.novaPrioridade = tarefa.prioridade;
+      this.novoEstudanteId = tarefa.estudanteId;
+      this.novaDataEntrega = tarefa.dataEntrega ? new Date(tarefa.dataEntrega) : null;
     }
   }
 
@@ -158,6 +168,8 @@ export class Tarefas {
     this.novoNome = '';
     this.novoStatus = 'pendente';
     this.novaPrioridade = 'media';
+    this.novoEstudanteId = null;
+    this.novaDataEntrega = null;
   }
 
 

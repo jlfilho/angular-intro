@@ -4,9 +4,9 @@ export type PrioridadeTarefa = 'baixa' | 'media' | 'alta';
 
 export type Tarefa = {
   id: number;
-  estudanteId: number; // 🔥 NOVO
+  estudanteId: number;
   nome: string;
   status: StatusTarefa;
   prioridade: PrioridadeTarefa;
-  dataEntrega?: string;
+  dataEntrega: Date; // 🔥 NOVO
 };

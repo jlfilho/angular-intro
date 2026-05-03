@@ -11,6 +11,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmacaoDialog } from '../../components/confirmacao-dialog/confirmacao-dialog';
 import { TurnoEstudante } from '../../models/estudante.model';
 import { EstudanteService } from '../../services/estudante.service';
+import { TurnoLabelPipe } from '../../pipes/turno-label-pipe';
 
 @Component({
   selector: 'app-estudantes',
@@ -22,6 +23,7 @@ import { EstudanteService } from '../../services/estudante.service';
     MatInputModule,
     MatSelectModule,
     MatDialogModule,
+    TurnoLabelPipe
   ],
   templateUrl: './estudantes.html',
   styleUrl: './estudantes.css',
