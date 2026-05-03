@@ -1,0 +1,12 @@
+.area-relatorio {
+  margin-top: 24px;
+}
+
+.mensagem-relatorio {
+  padding: 16px;
+  background-color: #f8f9ff;
+}
+
+.erro {
+  color: #b00020;
+}

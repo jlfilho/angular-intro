@@ -1190,6 +1190,7 @@ turnoLabel
 
 ---
 
+
 # 📌 Módulo 10 — Refatorar o `TarefaCard` para usar os pipes personalizados
 
 Agora que os pipes existem, podemos voltar ao card e substituir os blocos `@if`.
@@ -1455,18 +1456,465 @@ Em vez de repetir vários @if para transformar valores como "concluida" em "Conc
 
 Assim, o template fica menor, mais legível e mais fácil de manter.
 ```
----
 
-# ✅ Correção didática da ordem
+# 📌 Módulo 11 — Deferrable Views com relatório carregado sob demanda
 
-No tutorial, deixe explícito assim:
+## Objetivo
+
+Criar um componente de relatório separado e carregá-lo sob demanda usando:
 
 ```text
-1. Primeiro atualizamos o card com dataEntrega, imagem e pipes nativos.
-2. Nesse momento, status e prioridade ainda continuam com @if.
-3. Depois criamos os pipes personalizados.
-4. Só após criar os pipes, refatoramos o card para usá-los.
+@defer
+@placeholder
+@loading
+@error
 ```
+
+---
+
+## 1. Criar o componente de relatório
+
+No terminal, execute:
+
+```bash
+ng g c components/relatorio-estudos --skip-tests
+```
+
+Será criada a pasta:
+
+```text
+src/app/components/relatorio-estudos
+```
+
+---
+
+## 2. Implementar `relatorio-estudos.ts`
+
+Abra:
+
+```text
+src/app/components/relatorio-estudos/relatorio-estudos.ts
+```
+
+Substitua por:
+
+```ts
+import { Component, computed, inject } from '@angular/core';
+
+import { MatCardModule } from '@angular/material/card';
+import { MatTableModule } from '@angular/material/table';
+
+import { EstudanteService } from '../../services/estudante.service';
+import { TarefaService } from '../../services/tarefa.service';
+
+@Component({
+  selector: 'app-relatorio-estudos',
+  imports: [
+    MatCardModule,
+    MatTableModule
+  ],
+  templateUrl: './relatorio-estudos.html',
+  styleUrl: './relatorio-estudos.css'
+})
+export class RelatorioEstudos {
+  private readonly tarefaService = inject(TarefaService);
+  private readonly estudanteService = inject(EstudanteService);
+
+  tarefas = this.tarefaService.listar();
+  estudantes = this.estudanteService.listar();
+
+  colunasPorPrioridade = ['prioridade', 'quantidade'];
+  colunasPorEstudante = ['estudante', 'quantidade'];
+
+  totalEstudantes = computed(() => this.estudantes().length);
+
+  totalTarefas = computed(() => this.tarefas().length);
+
+  totalPendentes = computed(() =>
+    this.tarefas().filter(tarefa => tarefa.status === 'pendente').length
+  );
+
+  totalConcluidas = computed(() =>
+    this.tarefas().filter(tarefa => tarefa.status === 'concluida').length
+  );
+
+  tarefasPorPrioridade = computed(() => {
+    const baixa = this.tarefas().filter(tarefa => tarefa.prioridade === 'baixa').length;
+    const media = this.tarefas().filter(tarefa => tarefa.prioridade === 'media').length;
+    const alta = this.tarefas().filter(tarefa => tarefa.prioridade === 'alta').length;
+
+    return [
+      { prioridade: 'Baixa', quantidade: baixa },
+      { prioridade: 'Média', quantidade: media },
+      { prioridade: 'Alta', quantidade: alta }
+    ];
+  });
+
+  tarefasPorEstudante = computed(() => {
+    return this.estudantes().map(estudante => ({
+      estudante: estudante.nome,
+      quantidade: this.tarefas().filter(
+        tarefa => tarefa.estudanteId === estudante.id
+      ).length
+    }));
+  });
+}
+```
+
+---
+
+## 3. Implementar `relatorio-estudos.html`
+
+Abra:
+
+```text
+src/app/components/relatorio-estudos/relatorio-estudos.html
+```
+
+Substitua por:
+
+```html
+<section class="relatorio-estudos">
+  <h2>Relatório de estudos</h2>
+
+  <section class="indicadores-relatorio">
+    <mat-card>
+      <strong>Total de estudantes</strong>
+      <span>{{ totalEstudantes() }}</span>
+    </mat-card>
+
+    <mat-card>
+      <strong>Total de tarefas</strong>
+      <span>{{ totalTarefas() }}</span>
+    </mat-card>
+
+    <mat-card>
+      <strong>Tarefas pendentes</strong>
+      <span>{{ totalPendentes() }}</span>
+    </mat-card>
+
+    <mat-card>
+      <strong>Tarefas concluídas</strong>
+      <span>{{ totalConcluidas() }}</span>
+    </mat-card>
+  </section>
+
+  <section class="tabelas-relatorio">
+    <mat-card>
+      <h3>Tarefas por prioridade</h3>
+
+      <table
+        mat-table
+        [dataSource]="tarefasPorPrioridade()"
+        class="tabela-relatorio"
+      >
+        <ng-container matColumnDef="prioridade">
+          <th mat-header-cell *matHeaderCellDef>Prioridade</th>
+          <td mat-cell *matCellDef="let item">
+            {{ item.prioridade }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="quantidade">
+          <th mat-header-cell *matHeaderCellDef>Quantidade</th>
+          <td mat-cell *matCellDef="let item">
+            {{ item.quantidade }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colunasPorPrioridade"></tr>
+        <tr mat-row *matRowDef="let row; columns: colunasPorPrioridade;"></tr>
+      </table>
+    </mat-card>
+
+    <mat-card>
+      <h3>Tarefas por estudante</h3>
+
+      <table
+        mat-table
+        [dataSource]="tarefasPorEstudante()"
+        class="tabela-relatorio"
+      >
+        <ng-container matColumnDef="estudante">
+          <th mat-header-cell *matHeaderCellDef>Estudante</th>
+          <td mat-cell *matCellDef="let item">
+            {{ item.estudante }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="quantidade">
+          <th mat-header-cell *matHeaderCellDef>Quantidade</th>
+          <td mat-cell *matCellDef="let item">
+            {{ item.quantidade }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colunasPorEstudante"></tr>
+        <tr mat-row *matRowDef="let row; columns: colunasPorEstudante;"></tr>
+      </table>
+    </mat-card>
+  </section>
+</section>
+```
+
+---
+
+## 4. Implementar `relatorio-estudos.css`
+
+Abra:
+
+```text
+src/app/components/relatorio-estudos/relatorio-estudos.css
+```
+
+Coloque:
+
+```css
+.relatorio-estudos {
+  margin-top: 24px;
+}
+
+.indicadores-relatorio {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin: 16px 0 24px;
+}
+
+.indicadores-relatorio mat-card {
+  padding: 16px;
+  background-color: #f8f9ff;
+}
+
+.indicadores-relatorio strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.indicadores-relatorio span {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.tabelas-relatorio {
+  display: grid;
+  gap: 24px;
+}
+
+.tabelas-relatorio mat-card {
+  padding: 16px;
+  background-color: #f8f9ff;
+}
+
+.tabela-relatorio {
+  width: 100%;
+}
+```
+
+---
+
+## 5. Usar o relatório na página `Relatorios`
+
+Como o projeto já possui a rota `/relatorios`, criada anteriormente, vamos carregar o componente `RelatorioEstudos` nessa página.
+
+Abra:
+
+```text
+src/app/pages/relatorios/relatorios.ts
+```
+
+Atualize para:
+
+```ts
+import { Component } from '@angular/core';
+
+import { MatCardModule } from '@angular/material/card';
+
+import { RelatorioEstudos } from '../../components/relatorio-estudos/relatorio-estudos';
+
+@Component({
+  selector: 'app-relatorios',
+  imports: [
+    MatCardModule,
+    RelatorioEstudos
+  ],
+  templateUrl: './relatorios.html',
+  styleUrl: './relatorios.css'
+})
+export class Relatorios {}
+```
+
+---
+
+## 6. Usar `@defer` em `relatorios.html`
+
+Abra:
+
+```text
+src/app/pages/relatorios/relatorios.html
+```
+
+Substitua por:
+
+```html
+<h1>Relatórios</h1>
+
+<p>
+  Esta página apresenta uma visão geral dos estudantes e das tarefas cadastradas.
+</p>
+
+<section class="area-relatorio">
+  @defer (on viewport) {
+    <app-relatorio-estudos />
+  } @placeholder {
+    <mat-card class="mensagem-relatorio">
+      Relatório disponível para carregamento.
+    </mat-card>
+  } @loading {
+    <mat-card class="mensagem-relatorio">
+      Carregando relatório...
+    </mat-card>
+  } @error {
+    <mat-card class="mensagem-relatorio erro">
+      Erro ao carregar relatório.
+    </mat-card>
+  }
+</section>
+```
+
+---
+
+## 7. Estilizar `relatorios.css`
+
+Abra:
+
+```text
+src/app/pages/relatorios/relatorios.css
+```
+
+Coloque:
+
+```css
+.area-relatorio {
+  margin-top: 24px;
+}
+
+.mensagem-relatorio {
+  padding: 16px;
+  background-color: #f8f9ff;
+}
+
+.erro {
+  color: #b00020;
+}
+```
+
+---
+
+## 8. Explicação didática
+
+Explique aos alunos:
+
+```text
+O @defer permite adiar o carregamento de uma parte da tela.
+
+Neste caso, o relatório só será carregado quando a área entrar na tela.
+```
+
+Explique cada bloco:
+
+```text
+@defer
+→ conteúdo principal que será carregado sob demanda.
+
+@placeholder
+→ conteúdo exibido antes do carregamento.
+
+@loading
+→ conteúdo exibido durante o carregamento.
+
+@error
+→ conteúdo exibido caso ocorra erro no carregamento.
+```
+
+---
+
+## 9. Por que usar `on viewport`?
+
+Neste exemplo, usamos:
+
+```html
+@defer (on viewport)
+```
+
+Isso significa:
+
+```text
+Carregar o relatório quando a área do relatório aparecer na tela.
+```
+
+Essa estratégia é útil quando o conteúdo é mais pesado ou não precisa aparecer imediatamente no primeiro carregamento.
+
+---
+
+## 10. Alternativa simples
+
+Se quiser mostrar o exemplo conceitual mais direto, também é possível usar:
+
+```html
+@defer {
+  <app-relatorio-estudos />
+} @placeholder {
+  <p>Relatório disponível para carregamento.</p>
+} @loading {
+  <p>Carregando relatório...</p>
+} @error {
+  <p>Erro ao carregar relatório.</p>
+}
+```
+
+Mas, para a aula, o uso com:
+
+```html
+@defer (on viewport)
+```
+
+é mais interessante porque demonstra melhor a ideia de carregamento sob demanda.
+
+---
+
+## 11. Testes esperados
+
+Execute:
+
+```bash
+ng serve
+```
+
+Acesse:
+
+```text
+http://localhost:4200/relatorios
+```
+
+Verifique:
+
+```text
+1. A página Relatórios abre normalmente.
+2. O placeholder aparece antes do carregamento.
+3. O relatório é carregado quando a área entra na tela.
+4. Os indicadores exibem:
+   - total de estudantes;
+   - total de tarefas;
+   - tarefas pendentes;
+   - tarefas concluídas.
+5. A tabela de prioridade exibe:
+   - Baixa;
+   - Média;
+   - Alta.
+6. A tabela por estudante exibe a quantidade de tarefas de cada estudante.
+```
+
 
 A estrutura final esperada do curso já previa `components/relatorio-estudos` e pipes em `src/app/pipes`, então esta aula também aproxima o projeto da arquitetura final planejada. 
 
