@@ -2,6 +2,19 @@
 
 <p>Cadastre, edite e remova estudantes do Gerenciador de Estudos.</p>
 
+@if (carregando()) {
+  <div class="estado-carregamento">
+    <mat-spinner diameter="32" aria-label="Carregando estudantes"></mat-spinner>
+    <span>Carregando estudantes...</span>
+  </div>
+}
+
+@if (erro()) {
+  <mat-card class="erro-card">
+    {{ erro() }}
+  </mat-card>
+}
+
 <mat-card class="formulario-card">
   <mat-card-header>
     <mat-card-title>

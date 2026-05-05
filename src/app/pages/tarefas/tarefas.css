@@ -84,3 +84,17 @@
 .linha-relatorio:last-child {
   border-bottom: none;
 }
+
+.estado-carregamento {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.erro-card {
+  padding: 16px;
+  margin: 16px 0;
+  background-color: #fff3f3;
+  color: #8a1f1f;
+}

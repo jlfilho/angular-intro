@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -15,7 +15,7 @@ import { TarefaService } from '../../services/tarefa.service';
   templateUrl: './relatorio-estudos.html',
   styleUrl: './relatorio-estudos.css',
 })
-export class RelatorioEstudos {
+export class RelatorioEstudos implements OnInit {
   private readonly tarefaService = inject(TarefaService);
   private readonly estudanteService = inject(EstudanteService);
 
@@ -57,4 +57,9 @@ export class RelatorioEstudos {
       ).length
     }));
   });
+
+  ngOnInit(): void {
+    this.estudanteService.carregar();
+    this.tarefaService.carregar();
+  }
 }

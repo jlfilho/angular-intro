@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { KeyValuePipe } from '@angular/common'; // 🔥 NOVO
 import { FormsModule } from '@angular/forms';
 
@@ -9,6 +9,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { EstudanteService } from '../../services/estudante.service';
 
@@ -30,17 +31,18 @@ import { ConfirmacaoDialog } from '../../components/confirmacao-dialog/confirmac
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatProgressSpinnerModule,
     TarefaCard
   ],
   templateUrl: './tarefas.html',
   styleUrl: './tarefas.css',
 })
-export class Tarefas {
+export class Tarefas implements OnInit {
   private readonly tarefaService = inject(TarefaService);
   private readonly dialog = inject(MatDialog);
   private readonly estudanteService = inject(EstudanteService);
 
-  novoEstudanteId: number | null = null;
+  novoEstudanteId: string | null = null;
   tarefas = this.tarefaService.listar();
   estudantes = this.estudanteService.listar();
 
@@ -49,9 +51,15 @@ export class Tarefas {
   novaPrioridade: PrioridadeTarefa = 'media';
   novaDataEntrega: Date | null = null;
 
-  idEmEdicao: number | null = null;
+  idEmEdicao: string | null = null;
   filtroSelecionado = signal<'todas' | 'pendente' | 'concluida' | 'alta'>('todas');
-  estudanteSelecionadoId = signal<number | null>(null);
+  estudanteSelecionadoId = signal<string | null>(null);
+
+  carregandoTarefas = this.tarefaService.estaCarregando();
+  erroTarefas = this.tarefaService.mensagemErro();
+
+  carregandoEstudantes = this.estudanteService.estaCarregando();
+  erroEstudantes = this.estudanteService.mensagemErro();
 
   totalTarefas = computed(() => this.tarefas().length);
 
@@ -105,6 +113,11 @@ export class Tarefas {
     }
   });
 
+  ngOnInit(): void {
+    this.estudanteService.carregar();
+    this.tarefaService.carregar();
+  }
+
   salvarFormulario(): void {
     if (this.novoEstudanteId === null || this.novaDataEntrega === null) {
       return;
@@ -127,12 +140,12 @@ export class Tarefas {
     this.limparFormulario();
   }
 
-  buscarNomeEstudante(id: number): string {
+  buscarNomeEstudante(id: string): string {
     const estudante = this.estudanteService.buscarPorId(id);
     return estudante ? estudante.nome : 'Não encontrado';
   }
 
-  editarTarefaPorId(id: number): void {
+  editarTarefaPorId(id: string): void {
     const tarefa = this.tarefaService.buscarPorId(id);
 
     if (tarefa) {
@@ -145,7 +158,7 @@ export class Tarefas {
     }
   }
 
-  removerTarefa(id: number): void {
+  removerTarefa(id: string): void {
     const dialogRef = this.dialog.open(ConfirmacaoDialog);
 
     dialogRef.afterClosed().subscribe((confirmou: boolean) => {

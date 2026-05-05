@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { ConfirmacaoDialog } from '../../components/confirmacao-dialog/confirmacao-dialog';
 import { TurnoEstudante } from '../../models/estudante.model';
@@ -23,18 +24,21 @@ import { TurnoLabelPipe } from '../../pipes/turno-label-pipe';
     MatInputModule,
     MatSelectModule,
     MatDialogModule,
+    MatProgressSpinnerModule,
     TurnoLabelPipe
   ],
   templateUrl: './estudantes.html',
   styleUrl: './estudantes.css',
 })
-export class Estudantes {
+export class Estudantes implements OnInit {
   private readonly estudanteService = inject(EstudanteService);
   private readonly dialog = inject(MatDialog);
 
   estudantes = this.estudanteService.listar();
 
-  idEmEdicao: number | null = null;
+  idEmEdicao: string | null = null;
+  carregando = this.estudanteService.estaCarregando();
+  erro = this.estudanteService.mensagemErro();
 
   formEstudante = new FormGroup({
     nome: new FormControl('', {
@@ -72,6 +76,10 @@ export class Estudantes {
     })
   });
 
+  ngOnInit(): void {
+    this.estudanteService.carregar();
+  }
+
   salvarFormulario(): void {
     if (this.formEstudante.invalid) {
       this.formEstudante.markAllAsTouched();
@@ -97,7 +105,7 @@ export class Estudantes {
     this.limparFormulario();
   }
 
-  editarEstudante(id: number): void {
+  editarEstudante(id: string): void {
     const estudante = this.estudanteService.buscarPorId(id);
 
     if (estudante) {
@@ -113,7 +121,7 @@ export class Estudantes {
     }
   }
 
-  removerEstudante(id: number): void {
+  removerEstudante(id: string): void {
     const dialogRef = this.dialog.open(ConfirmacaoDialog);
 
     dialogRef.afterClosed().subscribe((confirmou: boolean) => {

@@ -898,7 +898,497 @@ Dados persistidos no json-server e consumidos via HttpClient.
 
 ---
 
-# Aula 8 — Autenticação com JWT, Bearer Token, Interceptor e Guard
+# Aula 8 — Tabelas, paginação e filtros no lado servidor
+
+## Tema
+
+Evoluir as listagens do sistema usando tabelas, paginação, ordenação e filtros enviados para a API.
+
+## Objetivo
+
+Transformar as listagens de estudantes e tarefas em listagens mais profissionais, usando `mat-table`, `mat-paginator`, `mat-sort` e parâmetros HTTP para buscar dados paginados e filtrados diretamente no `json-server`.
+
+A aula parte do estado final da Aula 7, em que `EstudanteService` e `TarefaService` já consomem a API REST fake com `HttpClient`.
+
+## Conteúdos
+
+### 1. Revisão da Aula 7
+
+Retomar:
+
+* `json-server`;
+* `db.json`;
+* endpoints REST;
+* `HttpClient`;
+* `provideHttpClient`;
+* `get`;
+* `post`;
+* `put`;
+* `delete`;
+* `subscribe`;
+* tratamento de erro;
+* estado de carregamento;
+* services HTTP.
+
+Relembrar os endpoints já existentes:
+
+```text
+GET     /estudantes
+POST    /estudantes
+PUT     /estudantes/:id
+DELETE  /estudantes/:id
+
+GET     /tarefas
+POST    /tarefas
+PUT     /tarefas/:id
+DELETE  /tarefas/:id
+```
+
+---
+
+### 2. Conceitos de listagem paginada
+
+Trabalhar:
+
+* diferença entre paginação no front-end e paginação no servidor;
+* quando usar paginação server-side;
+* vantagem de não carregar todos os registros de uma vez;
+* página atual;
+* tamanho da página;
+* total de registros;
+* filtros enviados para a API;
+* ordenação enviada para a API.
+
+Exemplo conceitual:
+
+```text
+Tela pede:
+Página 1, com 5 registros por página.
+
+API responde:
+Apenas os 5 primeiros registros e o total disponível.
+```
+
+---
+
+### 3. Parâmetros de consulta na API
+
+Trabalhar parâmetros como:
+
+```text
+_page
+_limit ou _per_page
+_sort
+_order
+q
+```
+
+Exemplo:
+
+```text
+GET /estudantes?_page=1&_limit=5
+```
+
+Ou, conforme a versão do `json-server`:
+
+```text
+GET /estudantes?_page=1&_per_page=5
+```
+
+Exemplo com ordenação:
+
+```text
+GET /estudantes?_page=1&_limit=5&_sort=nome&_order=asc
+```
+
+Exemplo com busca textual:
+
+```text
+GET /estudantes?_page=1&_limit=5&q=ana
+```
+
+Observação didática:
+
+```text
+Dependendo da versão do json-server, os parâmetros de paginação podem variar.
+O professor deve orientar a turma a observar o comportamento da versão instalada.
+```
+
+---
+
+### 4. HttpParams e resposta HTTP completa
+
+Trabalhar:
+
+* `HttpParams`;
+* montagem de query params;
+* `observe: 'response'`;
+* leitura de `body`;
+* leitura de headers;
+* total de registros;
+* tratamento quando o total não vier no header;
+* criação de tipos auxiliares para resposta paginada.
+
+Exemplo conceitual:
+
+```ts
+this.http.get<Estudante[]>(url, {
+  params,
+  observe: 'response'
+});
+```
+
+Criar tipo auxiliar:
+
+```ts
+export type ResultadoPaginado<T> = {
+  dados: T[];
+  total: number;
+};
+```
+
+---
+
+### 5. Angular Material Table
+
+Trabalhar:
+
+* `MatTableModule`;
+* estrutura básica de `mat-table`;
+* `matColumnDef`;
+* `mat-header-cell`;
+* `mat-cell`;
+* `mat-header-row`;
+* `mat-row`;
+* `dataSource`;
+* colunas exibidas;
+* coluna de ações.
+
+Componentes Angular Material:
+
+```text
+MatTableModule
+MatPaginatorModule
+MatSortModule
+MatProgressSpinnerModule
+MatFormFieldModule
+MatInputModule
+MatButtonModule
+MatIconModule
+```
+
+Exemplo conceitual:
+
+```html
+<table mat-table [dataSource]="estudantes()">
+  ...
+</table>
+```
+
+---
+
+### 6. Paginação com MatPaginator
+
+Trabalhar:
+
+* `MatPaginatorModule`;
+* `PageEvent`;
+* `pageIndex`;
+* `pageSize`;
+* `length`;
+* `pageSizeOptions`;
+* evento `(page)`;
+* conversão entre índice da tela e página da API.
+
+Exemplo conceitual:
+
+```html
+<mat-paginator
+  [length]="totalEstudantes()"
+  [pageSize]="tamanhoPagina"
+  [pageSizeOptions]="[5, 10, 20]"
+  (page)="aoMudarPagina($event)">
+</mat-paginator>
+```
+
+Explicação importante:
+
+```text
+O MatPaginator começa em pageIndex 0.
+A API normalmente começa em página 1.
+Por isso, enviamos pageIndex + 1 para a API.
+```
+
+---
+
+### 7. Ordenação com MatSort
+
+Trabalhar:
+
+* `MatSortModule`;
+* `Sort`;
+* `matSort`;
+* `mat-sort-header`;
+* campo ativo;
+* direção da ordenação;
+* envio de `_sort` e `_order` para a API;
+* recarregamento da listagem ao ordenar.
+
+Exemplo conceitual:
+
+```html
+<table
+  mat-table
+  matSort
+  (matSortChange)="aoMudarOrdenacao($event)"
+  [dataSource]="estudantes()">
+</table>
+```
+
+Exemplo de parâmetro enviado:
+
+```text
+GET /estudantes?_page=1&_limit=5&_sort=nome&_order=asc
+```
+
+---
+
+### 8. Filtro textual no lado servidor
+
+Trabalhar:
+
+* campo de busca;
+* `FormControl`;
+* busca por texto;
+* botão pesquisar;
+* botão limpar;
+* reset da página ao filtrar;
+* envio do parâmetro `q`;
+* estado de lista vazia.
+
+Exemplo conceitual:
+
+```text
+Buscar por nome, e-mail ou curso.
+```
+
+Exemplo de endpoint:
+
+```text
+GET /estudantes?_page=1&_limit=5&q=angular
+```
+
+---
+
+### 9. Refatoração do EstudanteService
+
+Adicionar ao `EstudanteService`:
+
+```text
+listarPaginado
+total
+parâmetros de paginação
+parâmetros de busca
+parâmetros de ordenação
+estado de carregamento
+estado de erro
+```
+
+Responsabilidades:
+
+* buscar página atual;
+* atualizar signal de estudantes;
+* atualizar signal de total de registros;
+* tratar erro;
+* controlar carregamento;
+* manter os métodos de CRUD da Aula 7.
+
+Exemplo de assinatura:
+
+```ts
+listarPaginado(opcoes: {
+  pagina: number;
+  limite: number;
+  termo?: string;
+  ordenarPor?: string;
+  direcao?: 'asc' | 'desc' | '';
+}): void
+```
+
+---
+
+### 10. Página Estudantes com tabela paginada
+
+Transformar a listagem de estudantes em `mat-table`.
+
+Colunas sugeridas:
+
+```text
+Nome
+E-mail
+Curso
+Turno
+Data de ingresso
+Ações
+```
+
+A tabela deve permitir:
+
+* visualizar estudantes em formato tabular;
+* paginar no servidor;
+* ordenar por nome, e-mail ou curso;
+* buscar por texto;
+* editar estudante;
+* remover estudante;
+* exibir carregamento;
+* exibir erro;
+* exibir mensagem quando não houver registros.
+
+---
+
+### 11. Filtros server-side na página de tarefas
+
+Aplicar o conceito também em tarefas, aproveitando os filtros já criados na Aula 5.
+
+Filtros enviados para a API:
+
+```text
+status
+prioridade
+estudanteId
+q
+```
+
+Exemplos:
+
+```text
+GET /tarefas?status=pendente
+GET /tarefas?prioridade=alta
+GET /tarefas?estudanteId=1
+GET /tarefas?q=angular
+```
+
+Com paginação:
+
+```text
+GET /tarefas?_page=1&_limit=5&status=pendente&estudanteId=1
+```
+
+A página de tarefas deve permitir:
+
+* filtrar por estudante;
+* filtrar por status;
+* filtrar por prioridade;
+* buscar por texto;
+* paginar resultados;
+* manter cadastro, edição e remoção;
+* manter o vínculo com estudantes;
+* manter os indicadores e relatórios quando possível.
+
+Observação didática:
+
+```text
+Na página de tarefas, o professor pode optar por manter a visualização em cards e aplicar apenas filtros server-side.
+A tabela completa pode ficar inicialmente apenas para estudantes, para reduzir a complexidade.
+```
+
+---
+
+### 12. Estado de carregamento e lista vazia
+
+Trabalhar:
+
+* `mat-spinner`;
+* mensagens de erro;
+* mensagem para lista vazia;
+* desabilitar botões durante carregamento;
+* feedback visual ao usuário.
+
+Exemplos de mensagens:
+
+```text
+Carregando estudantes...
+Não foi possível carregar os estudantes.
+Nenhum estudante encontrado para os filtros informados.
+```
+
+---
+
+### 13. Ajustes no json-server
+
+Preparar o `db.json` com mais dados para testar paginação.
+
+Sugestão:
+
+```text
+Cadastrar pelo menos 15 estudantes
+Cadastrar pelo menos 20 tarefas
+```
+
+Ou adicionar manualmente no `db.json`.
+
+Objetivo:
+
+```text
+A paginação só fica visível quando há quantidade suficiente de registros.
+```
+
+---
+
+## Produto da aula
+
+Aplicação com listagens avançadas consumindo dados paginados e filtrados da API fake.
+
+A página de estudantes deverá ter:
+
+* `mat-table`;
+* paginação server-side;
+* ordenação server-side;
+* filtro textual server-side;
+* ações de editar e remover;
+* estado de carregamento;
+* tratamento de erro;
+* mensagem de lista vazia.
+
+A página de tarefas deverá ter:
+
+* filtros enviados para a API;
+* paginação dos resultados;
+* busca textual;
+* integração com estudantes;
+* manutenção do CRUD já criado.
+
+Resultado esperado:
+
+```text
+Listagens profissionais com tabela, paginação, ordenação e filtros processados pela API.
+```
+
+---
+
+## Papel no curso
+
+Essa aula aprofunda o consumo de API iniciado na Aula 7.
+
+Na Aula 7, o aluno aprende:
+
+```text
+Como consumir uma API REST fake.
+```
+
+Na Aula 8, o aluno aprende:
+
+```text
+Como consumir a API de forma mais profissional, usando paginação, ordenação e filtros no servidor.
+```
+
+Essa aula prepara melhor o aluno para a Aula 9, pois o uso mais intenso de `HttpClient` facilita o entendimento posterior de interceptors, autenticação e envio automático de token.
+
+---
+
+# Aula 9 — Autenticação com JWT, Bearer Token, Interceptor e Guard
+
+A antiga Aula 8 passa a ser Aula 9.
 
 ## Tema
 
@@ -1022,97 +1512,6 @@ Resultado esperado:
 Gerenciador de Estudos com autenticação simulada e envio automático de Bearer Token.
 ```
 
----
-
-# Estrutura final esperada do projeto
-
-```text
-src/app
-├── components
-│   ├── tarefa-card
-│   ├── estudante-card
-│   └── relatorio-estudos
-├── pages
-│   ├── home
-│   ├── estudantes
-│   ├── tarefas
-│   ├── relatorios
-│   ├── sobre
-│   └── login
-├── services
-│   ├── tarefa.service.ts
-│   ├── estudante.service.ts
-│   └── auth.service.ts
-├── models
-│   ├── tarefa.model.ts
-│   └── estudante.model.ts
-├── pipes
-│   ├── prioridade-label.pipe.ts
-│   ├── status-tarefa-label.pipe.ts
-│   └── turno-label.pipe.ts
-├── guards
-│   └── auth.guard.ts
-├── interceptors
-│   └── auth.interceptor.ts
-├── app.ts
-├── app.html
-├── app.css
-├── app.routes.ts
-└── app.config.ts
-```
-
----
-
-# Avaliação final sugerida
-
-## Produto
-
-Aplicação Angular chamada:
-
-```text
-Gerenciador de Estudos
-```
-
-## Requisitos mínimos
-
-A aplicação deve conter:
-
-* layout com menu lateral usando `mat-sidenav`;
-* navegação com rotas;
-* página inicial;
-* página de estudantes;
-* página de tarefas;
-* página de relatórios;
-* página sobre;
-* CRUD de estudantes;
-* CRUD de tarefas;
-* tarefas vinculadas a estudantes;
-* tipagem forte para status e prioridade;
-* formulário com `ngModel` e validação visual;
-* formulário reativo no cadastro de estudantes;
-* serviço local e serviço HTTP;
-* API fake com `json-server`;
-* pipes nativos;
-* pipe personalizado;
-* componente com `input`;
-* componente com `output`;
-* imagens com boas práticas;
-* relatório carregado com `@defer`;
-* login;
-* token;
-* interceptor;
-* guard;
-* rotas protegidas;
-* versionamento no GitHub.
-
-## Produto final esperado
-
-```text
-Sistema Angular de gerenciamento de estudos com estudantes, tarefas, menu lateral, API fake e autenticação simulada.
-```
-
----
-
 # Resumo didático da progressão
 
 ```text
@@ -1122,7 +1521,8 @@ Aula 3 → CRUD de tarefas validado
 Aula 4 → CRUD de estudantes com formulário reativo
 Aula 5 → relacionar estudantes e tarefas
 Aula 6 → melhorar apresentação e performance
-Aula 7 → consumir API REST
-Aula 8 → autenticar e proteger rotas
+Aula 7 → Consumo de API REST com json-server
+Aula 8 → Tabelas, paginação e filtros no lado servidor
+Aula 9 → JWT, Interceptor e Guard
 ```
 
