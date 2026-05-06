@@ -26,7 +26,7 @@ import { StatusTarefaLabelPipe } from '../../pipes/status-tarefa-label-pipe';
 })
 export class TarefaCard {
 
-  id = input.required<number>();
+  id = input.required<string>();
   nome = input.required<string>();
   status = input.required<StatusTarefa>();
   prioridade = input.required<PrioridadeTarefa>();
@@ -34,8 +34,8 @@ export class TarefaCard {
   dataEntrega = input.required<Date>();
   dadosDebug = input<unknown>();
 
-  editar = output<number>();
-  remover = output<number>();
+  editar = output<string>();
+  remover = output<string>();
 
   aoClicarEditar(): void {
     this.editar.emit(this.id());
