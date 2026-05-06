@@ -13,35 +13,34 @@
       "nome": "Carlos Souza",
       "email": "carlos@email.com",
       "curso": "Frontend com Angular",
-      "turno": "matutino",
+      "turno": "vespertino",
       "dataIngresso": "2026-05-03"
     }
   ],
   "tarefas": [
     {
+      "id": "1",
+      "estudanteId": "1",
+      "nome": "Reestruturar aplicação Angular",
+      "status": "pendente",
+      "prioridade": "alta",
+      "dataEntrega": "2026-05-20"
+    },
+    {
       "id": "2",
+      "estudanteId": "1",
       "nome": "Criar menu lateral",
       "status": "em andamento",
       "prioridade": "media",
-      "estudanteId": "2",
-      "dataEntrega": "2026-05-24"
+      "dataEntrega": "2026-05-25"
     },
     {
       "id": "3",
+      "estudanteId": "2",
       "nome": "Revisar pipes personalizados",
       "status": "concluida",
       "prioridade": "baixa",
-      "estudanteId": "1",
-      "dataEntrega": "2026-05-29"
-    },
-    {
-      "id": "YByM7GDP7JU",
-      "nome": "Tarefa 1",
-      "status": "pendente",
-      "prioridade": "alta",
-      "estudanteId": "1",
-      "dataEntrega": "2026-05-08"
+      "dataEntrega": "2026-05-30"
     }
-  ],
-  "$schema": "./node_modules/json-server/schema.json"
+  ]
 }
