@@ -1,8 +1,24 @@
 import { inject, Injectable, Signal, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 
 import { Estudante } from '../models/estudante.model';
 
+type JsonServerPaginado<T> = {
+  first?: number;
+  prev?: number | null;
+  next?: number | null;
+  last?: number;
+  pages?: number;
+  items?: number;
+  data?: T[];
+};
+
+type OpcoesListagem = {
+  pagina: number;
+  limite: number;
+  ordenarPor?: string;
+  direcao?: 'asc' | 'desc' | '';
+};
 @Injectable({
   providedIn: 'root',
 })
@@ -11,11 +27,16 @@ export class EstudanteService {
   private readonly apiUrl = 'http://localhost:3000/estudantes';
 
   private readonly estudantes = signal<Estudante[]>([]);
+  private readonly total = signal(0);
   private readonly carregando = signal(false);
   private readonly erro = signal<string | null>(null);
 
   listar(): Signal<Estudante[]> {
     return this.estudantes.asReadonly();
+  }
+
+  totalRegistros(): Signal<number> {
+    return this.total.asReadonly();
   }
 
   estaCarregando(): Signal<boolean> {
@@ -27,16 +48,56 @@ export class EstudanteService {
   }
 
   carregar(): void {
+    this.listarPaginado({
+      pagina: 1,
+      limite: 5
+    });
+  }
+
+  listarPaginado(opcoes: OpcoesListagem): void {
     this.carregando.set(true);
     this.erro.set(null);
 
-    this.http.get<Estudante[]>(this.apiUrl).subscribe({
-      next: (dados) => {
+    let params = new HttpParams()
+      .set('_page', opcoes.pagina)
+      .set('_per_page', opcoes.limite);
+
+    if (opcoes.ordenarPor && opcoes.direcao) {
+      const campoOrdenacao =
+        opcoes.direcao === 'desc'
+          ? `-${opcoes.ordenarPor}`
+          : opcoes.ordenarPor;
+
+      params = params.set('_sort', campoOrdenacao);
+    }
+
+    this.http.get<Estudante[] | JsonServerPaginado<Estudante>>(
+      this.apiUrl,
+      {
+        params,
+        observe: 'response'
+      }
+    ).subscribe({
+      next: (resposta) => {
+        const corpo = resposta.body;
+
+        const dados = Array.isArray(corpo)
+          ? corpo
+          : corpo?.data ?? [];
+
+        const totalHeader = resposta.headers.get('X-Total-Count');
+        const totalApi = Array.isArray(corpo)
+          ? Number(totalHeader ?? dados.length)
+          : Number(corpo?.items ?? dados.length);
+
         this.estudantes.set(dados);
+        this.total.set(totalApi);
         this.carregando.set(false);
       },
       error: () => {
         this.erro.set('Não foi possível carregar os estudantes.');
+        this.estudantes.set([]);
+        this.total.set(0);
         this.carregando.set(false);
       }
     });
@@ -57,6 +118,7 @@ export class EstudanteService {
           novoEstudante
         ]);
 
+        this.total.update(valorAtual => valorAtual + 1);
         this.carregando.set(false);
       },
       error: () => {
@@ -100,6 +162,7 @@ export class EstudanteService {
           listaAtual.filter(estudante => estudante.id !== id)
         );
 
+        this.total.update(valorAtual => Math.max(0, valorAtual - 1));
         this.carregando.set(false);
       },
       error: () => {

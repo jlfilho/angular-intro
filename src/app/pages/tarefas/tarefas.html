@@ -138,68 +138,82 @@
 
 <section class="indicadores">
   <mat-card>
-    <strong>Total</strong>
-    <span>{{ totalTarefas() }}</span>
+    <strong>Exibidas na página</strong>
+    <span>{{ totalTarefasPagina() }}</span>
   </mat-card>
 
   <mat-card>
-    <strong>Pendentes</strong>
+    <strong>Pendentes na página</strong>
     <span>{{ totalPendentes() }}</span>
   </mat-card>
 
   <mat-card>
-    <strong>Concluídas</strong>
+    <strong>Concluídas na página</strong>
     <span>{{ totalConcluidas() }}</span>
   </mat-card>
 
   <mat-card>
-    <strong>Alta prioridade</strong>
+    <strong>Alta prioridade na página</strong>
     <span>{{ totalAlta() }}</span>
   </mat-card>
 </section>
 
 <section class="filtros-tarefas">
-  <!-- filtro por estudante -->
-  <div class="filtro-estudante">
-    <mat-form-field appearance="outline">
-      <mat-label>Filtrar por estudante</mat-label>
+  <mat-form-field appearance="outline" class="campo-busca">
+    <mat-label>Buscar tarefa</mat-label>
 
-      <mat-select
-        [value]="estudanteSelecionadoId()"
-        (selectionChange)="estudanteSelecionadoId.set($event.value)"
-      >
-        <mat-option [value]="null">Todos</mat-option>
+    <input
+      matInput
+      type="text"
+      [formControl]="busca"
+      placeholder="Ex.: Angular, pendente, alta ou nome do estudante"
+      (keyup.enter)="pesquisar()"
+    />
+  </mat-form-field>
 
-        @for (estudante of estudantes(); track estudante.id) {
-          <mat-option [value]="estudante.id">
-            {{ estudante.nome }}
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
+  <button mat-raised-button color="primary" type="button" (click)="pesquisar()">Pesquisar</button>
+
+  <button mat-button type="button" (click)="limparBusca()">Limpar</button>
+
+  <mat-form-field appearance="outline" class="filtro-estudante">
+    <mat-label>Filtrar por estudante</mat-label>
+
+    <mat-select
+      [value]="estudanteSelecionadoId()"
+      (selectionChange)="aplicarFiltroEstudante($event.value)"
+    >
+      <mat-option [value]="null">Todos</mat-option>
+
+      @for (estudante of estudantes(); track estudante.id) {
+        <mat-option [value]="estudante.id">
+          {{ estudante.nome }}
+        </mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <div class="botoes-filtro">
+    <button mat-raised-button type="button" (click)="aplicarFiltroGeral('todas')">Todas</button>
+
+    <button mat-raised-button type="button" (click)="aplicarFiltroGeral('pendente')">
+      Pendentes
+    </button>
+
+    <button mat-raised-button type="button" (click)="aplicarFiltroGeral('concluida')">
+      Concluídas
+    </button>
+
+    <button mat-raised-button type="button" (click)="aplicarFiltroGeral('alta')">
+      Alta prioridade
+    </button>
   </div>
-  <button mat-raised-button color="primary" type="button" (click)="filtroSelecionado.set('todas')">
-    Todas
-  </button>
-
-  <button mat-raised-button type="button" (click)="filtroSelecionado.set('pendente')">
-    Pendentes
-  </button>
-
-  <button mat-raised-button type="button" (click)="filtroSelecionado.set('concluida')">
-    Concluídas
-  </button>
-
-  <button mat-raised-button type="button" (click)="filtroSelecionado.set('alta')">
-    Alta prioridade
-  </button>
 </section>
 
 <section class="lista-tarefas">
   <h2>Tarefas cadastradas</h2>
 
-  @if (tarefas().length === 0) {
-    <p>Nenhuma tarefa cadastrada. Use o formulário acima para adicionar sua primeira tarefa.</p>
+  @if (tarefasFiltradas().length === 0) {
+    <p>Nenhuma tarefa encontrada para os filtros informados.</p>
   } @else {
     @for (tarefa of tarefasFiltradas(); track tarefa.id) {
       <app-tarefa-card
@@ -216,20 +230,12 @@
     }
   }
 </section>
-
-<section class="relatorio-tarefas">
-  <h2>Relatório por estudante</h2>
-
-  @if (estudantes().length === 0) {
-    <p>Nenhum estudante cadastrado para gerar relatório.</p>
-  } @else {
-    <mat-card class="relatorio-card">
-      @for (item of tarefasPorEstudante() | keyvalue; track item.key) {
-        <div class="linha-relatorio">
-          <span>{{ item.key }}</span>
-          <strong>{{ item.value }} tarefa(s)</strong>
-        </div>
-      }
-    </mat-card>
-  }
-</section>
+<mat-paginator
+  [length]="totalRegistrosTarefas()"
+  [pageSize]="tamanhoPagina"
+  [pageSizeOptions]="[3, 5, 10, 20]"
+  showFirstLastButtons
+  (page)="aoMudarPagina($event)"
+  aria-label="Paginação de tarefas"
+>
+</mat-paginator>

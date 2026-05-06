@@ -1,31 +1,41 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DatePipe } from '@angular/common';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSortModule, Sort } from '@angular/material/sort';
+import { MatTableModule } from '@angular/material/table';
 
 import { ConfirmacaoDialog } from '../../components/confirmacao-dialog/confirmacao-dialog';
 import { TurnoEstudante } from '../../models/estudante.model';
-import { EstudanteService } from '../../services/estudante.service';
 import { TurnoLabelPipe } from '../../pipes/turno-label-pipe';
+import { EstudanteService } from '../../services/estudante.service';
 
 @Component({
   selector: 'app-estudantes',
   imports: [
     ReactiveFormsModule,
+    TurnoLabelPipe,
+    DatePipe,
     MatButtonModule,
     MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
     MatDialogModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatPaginatorModule,
     MatProgressSpinnerModule,
-    TurnoLabelPipe
+    MatSelectModule,
+    MatSortModule,
+    MatTableModule,
   ],
   templateUrl: './estudantes.html',
   styleUrl: './estudantes.css',
@@ -34,50 +44,106 @@ export class Estudantes implements OnInit {
   private readonly estudanteService = inject(EstudanteService);
   private readonly dialog = inject(MatDialog);
 
-  estudantes = this.estudanteService.listar();
+  @ViewChild(MatPaginator) paginator?: MatPaginator; //Novo
 
-  idEmEdicao: string | null = null;
+  estudantes = this.estudanteService.listar();
+  totalEstudantes = this.estudanteService.totalRegistros();
   carregando = this.estudanteService.estaCarregando();
   erro = this.estudanteService.mensagemErro();
+
+  colunasExibidas = ['nome', 'email', 'curso', 'turno', 'dataIngresso', 'acoes'];
+
+  paginaAtual = 0;
+  tamanhoPagina = 5;
+  termoBusca = signal('');
+
+  ordenarPor = '';
+  direcaoOrdenacao: 'asc' | 'desc' | '' = '';
+
+  idEmEdicao: string | null = null;
+
+  busca = new FormControl('', {
+    nonNullable: true,
+  });
 
   formEstudante = new FormGroup({
     nome: new FormControl('', {
       nonNullable: true,
-      validators: [
-        Validators.required,
-        Validators.minLength(3)
-      ]
+      validators: [Validators.required, Validators.minLength(3)],
     }),
     email: new FormControl('', {
       nonNullable: true,
-      validators: [
-        Validators.required,
-        Validators.email
-      ]
+      validators: [Validators.required, Validators.email],
     }),
     curso: new FormControl('', {
       nonNullable: true,
-      validators: [
-        Validators.required,
-        Validators.minLength(3)
-      ]
+      validators: [Validators.required, Validators.minLength(3)],
     }),
     turno: new FormControl<TurnoEstudante | ''>('', {
       nonNullable: true,
-      validators: [
-        Validators.required
-      ]
+      validators: [Validators.required],
     }),
     dataIngresso: new FormControl('', {
       nonNullable: true,
-      validators: [
-        Validators.required
-      ]
-    })
+      validators: [Validators.required],
+    }),
   });
 
   ngOnInit(): void {
-    this.estudanteService.carregar();
+    this.carregarEstudantes();
+  }
+
+  estudantesFiltrados = computed(() => {
+    const termo = this.termoBusca().toLowerCase().trim();
+
+    if (!termo) {
+      return this.estudantes();
+    }
+
+    return this.estudantes().filter((estudante) => {
+      return (
+        estudante.nome.toLowerCase().includes(termo) ||
+        estudante.email.toLowerCase().includes(termo) ||
+        estudante.curso.toLowerCase().includes(termo) ||
+        estudante.turno.toLowerCase().includes(termo) ||
+        estudante.dataIngresso.toLowerCase().includes(termo)
+      );
+    });
+  });
+
+  carregarEstudantes(): void {
+    this.estudanteService.listarPaginado({
+      pagina: this.paginaAtual + 1,
+      limite: this.tamanhoPagina,
+      ordenarPor: this.ordenarPor,
+      direcao: this.direcaoOrdenacao,
+    });
+  }
+
+  aoMudarPagina(evento: PageEvent): void {
+    this.paginaAtual = evento.pageIndex;
+    this.tamanhoPagina = evento.pageSize;
+
+    this.carregarEstudantes();
+  }
+
+  aoMudarOrdenacao(evento: Sort): void {
+    this.ordenarPor = evento.active;
+    this.direcaoOrdenacao = evento.direction;
+
+    this.paginaAtual = 0;
+    this.paginator?.firstPage();
+
+    this.carregarEstudantes();
+  }
+
+  pesquisar(): void {
+    this.termoBusca.set(this.busca.value.trim());
+  }
+
+  limparBusca(): void {
+    this.busca.setValue('');
+    this.termoBusca.set('');
   }
 
   salvarFormulario(): void {
@@ -93,7 +159,7 @@ export class Estudantes implements OnInit {
       email: dadosFormulario.email,
       curso: dadosFormulario.curso,
       turno: dadosFormulario.turno as TurnoEstudante,
-      dataIngresso: dadosFormulario.dataIngresso
+      dataIngresso: dadosFormulario.dataIngresso,
     };
 
     if (this.idEmEdicao === null) {
@@ -103,6 +169,10 @@ export class Estudantes implements OnInit {
     }
 
     this.limparFormulario();
+
+    setTimeout(() => {
+      this.carregarEstudantes();
+    }, 300);
   }
 
   editarEstudante(id: string): void {
@@ -116,7 +186,7 @@ export class Estudantes implements OnInit {
         email: estudante.email,
         curso: estudante.curso,
         turno: estudante.turno,
-        dataIngresso: estudante.dataIngresso
+        dataIngresso: estudante.dataIngresso,
       });
     }
   }
@@ -131,6 +201,10 @@ export class Estudantes implements OnInit {
         if (this.idEmEdicao === id) {
           this.limparFormulario();
         }
+
+        setTimeout(() => {
+          this.carregarEstudantes();
+        }, 300);
       }
     });
   }
@@ -147,12 +221,13 @@ export class Estudantes implements OnInit {
 
   private limparFormulario(): void {
     this.idEmEdicao = null;
+
     this.formEstudante.reset({
       nome: '',
       email: '',
       curso: '',
       turno: '',
-      dataIngresso: ''
+      dataIngresso: '',
     });
   }
 }

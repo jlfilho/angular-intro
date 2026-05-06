@@ -1,10 +1,27 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, Signal, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 
-import { Tarefa } from '../models/tarefa.model';
+import {
+  Tarefa
+} from '../models/tarefa.model';
 
 type TarefaApi = Omit<Tarefa, 'dataEntrega'> & {
   dataEntrega: string;
+};
+
+type JsonServerPaginado<T> = {
+  first?: number;
+  prev?: number | null;
+  next?: number | null;
+  last?: number;
+  pages?: number;
+  items?: number;
+  data?: T[];
+};
+
+type OpcoesListagemTarefas = {
+  pagina: number;
+  limite: number;
 };
 
 @Injectable({
@@ -12,15 +29,19 @@ type TarefaApi = Omit<Tarefa, 'dataEntrega'> & {
 })
 export class TarefaService {
   private readonly http = inject(HttpClient);
-
   private readonly apiUrl = 'http://localhost:3000/tarefas';
 
   private readonly tarefas = signal<Tarefa[]>([]);
+  private readonly total = signal(0);
   private readonly carregando = signal(false);
   private readonly erro = signal<string | null>(null);
 
   listar(): Signal<Tarefa[]> {
     return this.tarefas.asReadonly();
+  }
+
+  totalRegistros(): Signal<number> {
+    return this.total.asReadonly();
   }
 
   estaCarregando(): Signal<boolean> {
@@ -32,22 +53,52 @@ export class TarefaService {
   }
 
   carregar(): void {
+    this.listarPaginado({
+      pagina: 1,
+      limite: 5
+    });
+  }
+
+  listarPaginado(opcoes: OpcoesListagemTarefas): void {
     this.carregando.set(true);
     this.erro.set(null);
 
-    this.http.get<TarefaApi[]>(this.apiUrl).subscribe({
-      next: (dados) => {
-        const tarefasConvertidas: Tarefa[] = dados.map(tarefa =>
+    const params = new HttpParams()
+      .set('_page', opcoes.pagina)
+      .set('_per_page', opcoes.limite);
+
+    this.http.get<TarefaApi[] | JsonServerPaginado<TarefaApi>>(
+      this.apiUrl,
+      {
+        params,
+        observe: 'response'
+      }
+    ).subscribe({
+      next: (resposta) => {
+        const corpo = resposta.body;
+
+        const dadosApi = Array.isArray(corpo)
+          ? corpo
+          : corpo?.data ?? [];
+
+        const tarefasConvertidas = dadosApi.map(tarefa =>
           this.converterDaApi(tarefa)
         );
 
-        this.tarefas.set(tarefasConvertidas);
-        this.carregando.set(false);
+        const totalHeader = resposta.headers.get('X-Total-Count');
 
-        console.log('Tarefas carregadas com sucesso:', tarefasConvertidas);
+        const totalApi = Array.isArray(corpo)
+          ? Number(totalHeader ?? tarefasConvertidas.length)
+          : Number(corpo?.items ?? tarefasConvertidas.length);
+
+        this.tarefas.set(tarefasConvertidas);
+        this.total.set(totalApi);
+        this.carregando.set(false);
       },
       error: () => {
         this.erro.set('Não foi possível carregar as tarefas.');
+        this.tarefas.set([]);
+        this.total.set(0);
         this.carregando.set(false);
       }
     });
@@ -70,6 +121,7 @@ export class TarefaService {
           this.converterDaApi(novaTarefa)
         ]);
 
+        this.total.update(valorAtual => valorAtual + 1);
         this.carregando.set(false);
       },
       error: () => {
@@ -78,7 +130,6 @@ export class TarefaService {
       }
     });
   }
-
 
   editar(id: string, tarefaAtualizada: Omit<Tarefa, 'id'>): void {
     this.carregando.set(true);
@@ -93,7 +144,9 @@ export class TarefaService {
       next: (tarefaEditada) => {
         this.tarefas.update(listaAtual =>
           listaAtual.map(tarefa =>
-            tarefa.id === id ? this.converterDaApi(tarefaEditada) : tarefa
+            tarefa.id === id
+              ? this.converterDaApi(tarefaEditada)
+              : tarefa
           )
         );
 
@@ -116,6 +169,7 @@ export class TarefaService {
           listaAtual.filter(tarefa => tarefa.id !== id)
         );
 
+        this.total.update(valorAtual => Math.max(0, valorAtual - 1));
         this.carregando.set(false);
       },
       error: () => {

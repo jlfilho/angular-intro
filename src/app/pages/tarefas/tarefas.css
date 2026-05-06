@@ -14,6 +14,7 @@
   gap: 12px;
   align-items: center;
   margin-top: 8px;
+  flex-wrap: wrap;
 }
 
 .lista-tarefas {
@@ -27,9 +28,18 @@
 .filtros-tarefas {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
   margin: 24px 0;
+}
+
+.campo-busca {
+  min-width: 260px;
+  flex: 1;
+}
+
+.filtro-estudante {
+  min-width: 260px;
 }
 
 .botoes-filtro {
@@ -38,8 +48,8 @@
   flex-wrap: wrap;
 }
 
-.filtro-estudante {
-  min-width: 250px;
+mat-paginator {
+  margin-top: 16px;
 }
 
 .indicadores {
@@ -62,27 +72,6 @@
 .indicadores span {
   font-size: 24px;
   font-weight: 600;
-}
-
-.relatorio-tarefas {
-  margin-top: 32px;
-}
-
-.relatorio-card {
-  padding: 16px;
-  background-color: #f8f9ff;
-}
-
-.linha-relatorio {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 10px 0;
-  border-bottom: 1px solid #d6d9e6;
-}
-
-.linha-relatorio:last-child {
-  border-bottom: none;
 }
 
 .estado-carregamento {

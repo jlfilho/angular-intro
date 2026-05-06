@@ -1,6 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { KeyValuePipe } from '@angular/common'; // 🔥 NOVO
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -10,6 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 
 import { EstudanteService } from '../../services/estudante.service';
 
@@ -23,7 +23,6 @@ import { ConfirmacaoDialog } from '../../components/confirmacao-dialog/confirmac
   selector: 'app-tarefas',
   imports: [
     FormsModule,
-    KeyValuePipe,
     MatButtonModule,
     MatCardModule,
     MatDatepickerModule,
@@ -32,7 +31,9 @@ import { ConfirmacaoDialog } from '../../components/confirmacao-dialog/confirmac
     MatInputModule,
     MatSelectModule,
     MatProgressSpinnerModule,
-    TarefaCard
+    TarefaCard,
+    ReactiveFormsModule,
+    MatPaginatorModule
   ],
   templateUrl: './tarefas.html',
   styleUrl: './tarefas.css',
@@ -61,52 +62,72 @@ export class Tarefas implements OnInit {
   carregandoEstudantes = this.estudanteService.estaCarregando();
   erroEstudantes = this.estudanteService.mensagemErro();
 
-  totalTarefas = computed(() => this.tarefas().length);
+  totalRegistrosTarefas = this.tarefaService.totalRegistros();
+
+  paginaAtual = 0;
+  tamanhoPagina = 5;
+
+  busca = new FormControl('', {
+    nonNullable: true
+  });
+
+  termoBusca = signal('');
+
+  totalTarefasPagina = computed(() =>
+    this.tarefasFiltradas().length
+  );
 
   totalPendentes = computed(() =>
-    this.tarefas().filter(t => t.status === 'pendente').length
+    this.tarefasFiltradas().filter(
+      (tarefa) => tarefa.status === 'pendente'
+    ).length
   );
 
   totalConcluidas = computed(() =>
-    this.tarefas().filter(t => t.status === 'concluida').length
+    this.tarefasFiltradas().filter(
+      (tarefa) => tarefa.status === 'concluida'
+    ).length
   );
 
   totalAlta = computed(() =>
-    this.tarefas().filter(t => t.prioridade === 'alta').length
+    this.tarefasFiltradas().filter(
+      (tarefa) => tarefa.prioridade === 'alta'
+    ).length
   );
-
-  tarefasPorEstudante = computed(() => {
-    const mapa: Record<string, number> = {};
-
-    this.estudantes().forEach(estudante => {
-      mapa[estudante.nome] = this.tarefas().filter(
-        tarefa => tarefa.estudanteId === estudante.id
-      ).length;
-    });
-
-    return mapa;
-  });
 
   tarefasFiltradas = computed(() => {
     let lista = this.tarefas();
 
-    // filtro por estudante
+    const termo = this.termoBusca().toLowerCase().trim();
+
+    if (termo) {
+      lista = lista.filter(tarefa => {
+        const estudanteNome = this.buscarNomeEstudante(tarefa.estudanteId);
+
+        return (
+          tarefa.nome.toLowerCase().includes(termo) ||
+          tarefa.status.toLowerCase().includes(termo) ||
+          tarefa.prioridade.toLowerCase().includes(termo) ||
+          estudanteNome.toLowerCase().includes(termo)
+        );
+      });
+    }
+
     if (this.estudanteSelecionadoId() !== null) {
-      lista = lista.filter(
-        tarefa => tarefa.estudanteId === this.estudanteSelecionadoId()
+      lista = lista.filter(tarefa =>
+        tarefa.estudanteId === this.estudanteSelecionadoId()
       );
     }
 
-    // filtro geral
     switch (this.filtroSelecionado()) {
       case 'pendente':
-        return lista.filter(t => t.status === 'pendente');
+        return lista.filter(tarefa => tarefa.status === 'pendente');
 
       case 'concluida':
-        return lista.filter(t => t.status === 'concluida');
+        return lista.filter(tarefa => tarefa.status === 'concluida');
 
       case 'alta':
-        return lista.filter(t => t.prioridade === 'alta');
+        return lista.filter(tarefa => tarefa.prioridade === 'alta');
 
       default:
         return lista;
@@ -115,7 +136,14 @@ export class Tarefas implements OnInit {
 
   ngOnInit(): void {
     this.estudanteService.carregar();
-    this.tarefaService.carregar();
+    this.carregarTarefas();
+  }
+
+  carregarTarefas(): void {
+    this.tarefaService.listarPaginado({
+      pagina: this.paginaAtual + 1,
+      limite: this.tamanhoPagina
+    });
   }
 
   salvarFormulario(): void {
@@ -138,6 +166,10 @@ export class Tarefas implements OnInit {
     }
 
     this.limparFormulario();
+
+    setTimeout(() => {
+      this.carregarTarefas();
+    }, 300);
   }
 
   buscarNomeEstudante(id: string): string {
@@ -154,7 +186,9 @@ export class Tarefas implements OnInit {
       this.novoStatus = tarefa.status;
       this.novaPrioridade = tarefa.prioridade;
       this.novoEstudanteId = tarefa.estudanteId;
-      this.novaDataEntrega = tarefa.dataEntrega ? new Date(tarefa.dataEntrega) : null;
+      this.novaDataEntrega = tarefa.dataEntrega
+        ? new Date(tarefa.dataEntrega)
+        : null;
     }
   }
 
@@ -168,8 +202,14 @@ export class Tarefas implements OnInit {
         if (this.idEmEdicao === id) {
           this.limparFormulario();
         }
+
+        setTimeout(() => {
+          this.carregarTarefas();
+        }, 300);
       }
     });
+
+
   }
 
   cancelarEdicao(): void {
@@ -185,5 +225,30 @@ export class Tarefas implements OnInit {
     this.novaDataEntrega = null;
   }
 
+  aoMudarPagina(evento: PageEvent): void {
+    this.paginaAtual = evento.pageIndex;
+    this.tamanhoPagina = evento.pageSize;
+
+    this.carregarTarefas();
+  }
+
+  aplicarFiltroGeral(
+    filtro: 'todas' | 'pendente' | 'concluida' | 'alta'
+  ): void {
+    this.filtroSelecionado.set(filtro);
+  }
+
+  aplicarFiltroEstudante(id: string | null): void {
+    this.estudanteSelecionadoId.set(id);
+  }
+
+  pesquisar(): void {
+    this.termoBusca.set(this.busca.value.trim());
+  }
+
+  limparBusca(): void {
+    this.busca.setValue('');
+    this.termoBusca.set('');
+  }
 
 }

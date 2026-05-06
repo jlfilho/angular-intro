@@ -15,6 +15,86 @@
       "curso": "Frontend com Angular",
       "turno": "vespertino",
       "dataIngresso": "2026-05-03"
+    },
+    {
+      "id": "3",
+      "nome": "Maria Oliveira",
+      "email": "maria@email.com",
+      "curso": "Angular Intermediário",
+      "turno": "noturno",
+      "dataIngresso": "2026-05-04"
+    },
+    {
+      "id": "4",
+      "nome": "João Pereira",
+      "email": "joao@email.com",
+      "curso": "Desenvolvimento Web",
+      "turno": "matutino",
+      "dataIngresso": "2026-05-05"
+    },
+    {
+      "id": "5",
+      "nome": "Fernanda Lima",
+      "email": "fernanda@email.com",
+      "curso": "Frontend com Angular",
+      "turno": "vespertino",
+      "dataIngresso": "2026-05-06"
+    },
+    {
+      "id": "6",
+      "nome": "Pedro Santos",
+      "email": "pedro@email.com",
+      "curso": "Angular Básico",
+      "turno": "noturno",
+      "dataIngresso": "2026-05-07"
+    },
+    {
+      "id": "7",
+      "nome": "Juliana Costa",
+      "email": "juliana@email.com",
+      "curso": "Desenvolvimento Web",
+      "turno": "matutino",
+      "dataIngresso": "2026-05-08"
+    },
+    {
+      "id": "8",
+      "nome": "Rafael Almeida",
+      "email": "rafael@email.com",
+      "curso": "Angular Intermediário",
+      "turno": "vespertino",
+      "dataIngresso": "2026-05-09"
+    },
+    {
+      "id": "9",
+      "nome": "Patrícia Rocha",
+      "email": "patricia@email.com",
+      "curso": "Frontend com Angular",
+      "turno": "noturno",
+      "dataIngresso": "2026-05-10"
+    },
+    {
+      "id": "10",
+      "nome": "Lucas Martins",
+      "email": "lucas@email.com",
+      "curso": "Angular Básico",
+      "turno": "matutino",
+      "dataIngresso": "2026-05-11"
+    },
+    {
+      "id": "11",
+      "nome": "Camila Ferreira",
+      "email": "camila@email.com",
+      "curso": "Desenvolvimento Web",
+      "turno": "vespertino",
+      "dataIngresso": "2026-05-12"
+    },
+    {
+      "id": "12",
+      "nome": "Bruno Ribeiro",
+      "email": "bruno@email.com",
+      "curso": "Angular Intermediário",
+      "turno": "noturno",
+      "dataIngresso": "2026-05-13"
     }
   ],
   "tarefas": [
@@ -41,6 +121,142 @@
       "status": "concluida",
       "prioridade": "baixa",
       "dataEntrega": "2026-05-30"
+    },
+    {
+      "id": "4",
+      "estudanteId": "3",
+      "nome": "Implementar formulário reativo de estudantes",
+      "status": "pendente",
+      "prioridade": "alta",
+      "dataEntrega": "2026-06-02"
+    },
+    {
+      "id": "5",
+      "estudanteId": "4",
+      "nome": "Criar validações com mat-error",
+      "status": "em andamento",
+      "prioridade": "media",
+      "dataEntrega": "2026-06-04"
+    },
+    {
+      "id": "6",
+      "estudanteId": "5",
+      "nome": "Testar cadastro de estudantes",
+      "status": "concluida",
+      "prioridade": "baixa",
+      "dataEntrega": "2026-06-05"
+    },
+    {
+      "id": "7",
+      "estudanteId": "6",
+      "nome": "Relacionar tarefas com estudantes",
+      "status": "pendente",
+      "prioridade": "alta",
+      "dataEntrega": "2026-06-08"
+    },
+    {
+      "id": "8",
+      "estudanteId": "7",
+      "nome": "Criar filtro de tarefas por estudante",
+      "status": "em andamento",
+      "prioridade": "alta",
+      "dataEntrega": "2026-06-10"
+    },
+    {
+      "id": "9",
+      "estudanteId": "8",
+      "nome": "Adicionar indicadores com computed signals",
+      "status": "concluida",
+      "prioridade": "media",
+      "dataEntrega": "2026-06-12"
+    },
+    {
+      "id": "10",
+      "estudanteId": "9",
+      "nome": "Criar relatório de tarefas por estudante",
+      "status": "pendente",
+      "prioridade": "media",
+      "dataEntrega": "2026-06-15"
+    },
+    {
+      "id": "11",
+      "estudanteId": "10",
+      "nome": "Configurar locale brasileiro",
+      "status": "concluida",
+      "prioridade": "baixa",
+      "dataEntrega": "2026-06-17"
+    },
+    {
+      "id": "12",
+      "estudanteId": "11",
+      "nome": "Adicionar datepicker no formulário de tarefas",
+      "status": "em andamento",
+      "prioridade": "alta",
+      "dataEntrega": "2026-06-19"
+    },
+    {
+      "id": "13",
+      "estudanteId": "12",
+      "nome": "Exibir data de entrega formatada",
+      "status": "pendente",
+      "prioridade": "media",
+      "dataEntrega": "2026-06-22"
+    },
+    {
+      "id": "14",
+      "estudanteId": "2",
+      "nome": "Criar pipe de status da tarefa",
+      "status": "concluida",
+      "prioridade": "baixa",
+      "dataEntrega": "2026-06-24"
+    },
+    {
+      "id": "15",
+      "estudanteId": "3",
+      "nome": "Criar pipe de prioridade",
+      "status": "pendente",
+      "prioridade": "media",
+      "dataEntrega": "2026-06-26"
+    },
+    {
+      "id": "16",
+      "estudanteId": "4",
+      "nome": "Adicionar imagem de avatar no card",
+      "status": "em andamento",
+      "prioridade": "baixa",
+      "dataEntrega": "2026-06-29"
+    },
+    {
+      "id": "17",
+      "estudanteId": "5",
+      "nome": "Implementar relatório com @defer",
+      "status": "pendente",
+      "prioridade": "alta",
+      "dataEntrega": "2026-07-01"
+    },
+    {
+      "id": "18",
+      "estudanteId": "6",
+      "nome": "Configurar json-server",
+      "status": "concluida",
+      "prioridade": "media",
+      "dataEntrega": "2026-07-03"
+    },
+    {
+      "id": "19",
+      "estudanteId": "7",
+      "nome": "Refatorar services para HttpClient",
+      "status": "em andamento",
+      "prioridade": "alta",
+      "dataEntrega": "2026-07-06"
+    },
+    {
+      "id": "20",
+      "estudanteId": "8",
+      "nome": "Implementar paginação com mat-paginator",
+      "status": "pendente",
+      "prioridade": "alta",
+      "dataEntrega": "2026-07-08"
     }
   ]
 }
